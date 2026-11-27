@@ -1,0 +1,29 @@
+{
+  "about": "The whole kitchen family across three generations, plus an unrelated project, with nights, reunions and a coming of age. About 24 sessions and 7 nights with Claude.",
+  "env": {"ENSEMBLE_SLEEP_AT": "6"},
+  "nudge": true,
+  "beats_per_session": 1,
+  "steps": [
+    {"do": "sessions", "project": "recipe-core", "tasks": ["float-display", "unicode-fractions", "plural-glass", "flour-grams"]},
+    {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "recipe-core", "tasks": ["floats-again", "us-cup-240"]},
+    {"do": "night", "project": "recipe-core"},
+    {"do": "reunion"},
+
+    {"do": "sessions", "project": "meal-planner", "tasks": "all"},
+    {"do": "night", "project": "meal-planner"},
+    {"do": "sessions", "project": "pantry-tracker", "tasks": "all"},
+    {"do": "night", "project": "pantry-tracker"},
+    {"do": "reunion"},
+
+    {"do": "sessions", "project": "grocery-bot", "tasks": "all"},
+    {"do": "night", "project": "grocery-bot"},
+    {"do": "sessions", "project": "trail-log", "tasks": "all"},
+    {"do": "night", "project": "trail-log"},
+    {"do": "reunion"},
+
+    {"do": "milestone", "project": "recipe-core", "note": "v2: exact quantities everywhere"},
+    {"do": "session", "project": "recipe-core", "task": "floats-again"},
+    {"do": "ens", "project": "recipe-core", "args": ["family-tree"], "label": "family-tree"}
+  ]
+}

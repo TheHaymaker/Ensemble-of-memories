@@ -1,0 +1,22 @@
+{
+  "about": "Mechanics stress test, meant for --fake: the same tasks again and again with a night after each round, so memories get spaced uses, go long-term, form lessons and pass to children as sayings. Shows whether lessons and sayings ever appear at the default thresholds.",
+  "projects": ["recipe-core", "meal-planner", "grocery-bot"],
+  "env": {"ENSEMBLE_SLEEP_AT": "4"},
+  "beats_per_session": 2,
+  "steps": [
+    {"do": "sessions", "project": "recipe-core", "tasks": "all"}, {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "recipe-core", "tasks": "all"}, {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "recipe-core", "tasks": "all"}, {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "recipe-core", "tasks": "all"}, {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "recipe-core", "tasks": "all"}, {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "recipe-core", "tasks": "all"}, {"do": "night", "project": "recipe-core"},
+    {"do": "reunion"},
+    {"do": "sessions", "project": "meal-planner", "tasks": "all"}, {"do": "night", "project": "meal-planner"},
+    {"do": "sessions", "project": "meal-planner", "tasks": "all"}, {"do": "night", "project": "meal-planner"},
+    {"do": "sessions", "project": "meal-planner", "tasks": "all"}, {"do": "night", "project": "meal-planner"},
+    {"do": "reunion"},
+    {"do": "sessions", "project": "grocery-bot", "tasks": "all"}, {"do": "night", "project": "grocery-bot"},
+    {"do": "milestone", "project": "recipe-core", "note": "v2"},
+    {"do": "reunion"}
+  ]
+}

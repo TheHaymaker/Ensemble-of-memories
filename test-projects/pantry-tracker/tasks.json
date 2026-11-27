@@ -1,0 +1,19 @@
+{
+  "project": "pantry-tracker",
+  "parents": ["recipe-core"],
+  "about": "Second child of recipe-core (sibling of meal-planner). Different domain (dates), one shared theme (units).",
+  "tasks": [
+    {"id": "late-night-expiry", "title": "Fix expiry near midnight",
+     "prompt": "At 11pm local time, milk that expires tomorrow shows as expiring in 0 days, and sometimes yesterday's milk isn't flagged. Find out why and fix it. Add tests.",
+     "expect": ["expiry is a calendar date in the user's local zone, not a UTC datetime; compare dates, not timedeltas' .days"]},
+    {"id": "date-storage", "title": "Decide how expiry is stored",
+     "prompt": "Decide how expiry should be stored and serialized to JSON, implement save/load for the pantry, and write the decision in the README.",
+     "expect": ["expiry is stored as an ISO date string (YYYY-MM-DD)"]},
+    {"id": "use-it-up", "title": "Suggest what to use first",
+     "prompt": "Add a 'use it up' list: items expiring soonest first, with quantity shown cleanly (no float noise). Add tests.",
+     "expect": ["quantities displayed via exact fractions, like recipe-core"]},
+    {"id": "unit-merge", "title": "Merge pantry quantities",
+     "prompt": "Adding '500 g rice' to a pantry that has '1 kg rice' should give '1.5 kg rice', not two entries. Implement it.",
+     "expect": ["pantry merges same item across compatible units"]}
+  ]
+}

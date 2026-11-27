@@ -1,0 +1,22 @@
+{
+  "project": "meal-planner",
+  "parents": ["recipe-core"],
+  "about": "Child of recipe-core. Meets the float-display and unit themes again; adds week-start and leftovers decisions.",
+  "tasks": [
+    {"id": "combine-units", "title": "Combine milk across units",
+     "prompt": "The shopping list shows '1 cup milk' and '250 ml milk' as two lines. Combine quantities of the same item across compatible units into one line, in a sensible unit. Add tests.",
+     "expect": ["shopping_list converts compatible units to one base unit per item before adding"]},
+    {"id": "float-display", "title": "Clean up shopping list numbers",
+     "prompt": "The shopping list shows '0.7000000000000001 cup oil'. Fix how quantities are added and displayed.",
+     "expect": ["use exact fractions for quantities, as recipe-core does, to avoid float noise"]},
+    {"id": "monday-start", "title": "Start weeks on Monday",
+     "prompt": "Plans should always start on the Monday of the current week, whatever day you run it. Decide, implement, test.",
+     "expect": ["weeks start on Monday (ISO week)"]},
+    {"id": "leftovers", "title": "Plan leftovers nights",
+     "prompt": "Recipes can say 'serves': 4 and the household is 2. Plan the second half as a leftovers night instead of cooking again, and don't buy ingredients twice.",
+     "expect": ["a recipe that serves twice the household covers two nights; shopping counts it once"]},
+    {"id": "sunday-users", "title": "Let US users start on Sunday",
+     "prompt": "US users complain the week starts Monday. Revisit the week-start decision.",
+     "expect": ["week start is configurable: Monday by default, Sunday allowed (qualifies the Monday decision)"]}
+  ]
+}

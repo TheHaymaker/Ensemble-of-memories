@@ -1,0 +1,5 @@
+# harness output and its Python environment
+runs/
+.lab/
+__pycache__/
+*.pyc
