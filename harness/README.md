@@ -72,9 +72,10 @@ It says nothing about whether Claude uses Ensemble well.
   parent's memory files.
 - **Nudge on by default.** A one-line `--append-system-prompt` says the project uses Ensemble. Without
   it a short `-p` task may never touch the skill; `no-nudge` measures that.
-- **One beat per session.** Only `ens next-beat` advances Ensemble's clock, and the skill doesn't say
-  when to call it, so in real use memories may never fade or get spaced promotions. The harness calls
-  it once after each session (`beats_per_session`, or `"beats"` per step; 0 turns it off).
+- **One beat per session.** The SessionStart hook (`ens --listen`) advances Ensemble's clock once per
+  new session. `beats_per_session` (or `"beats"` per step) adds more, to model days between sessions.
+  The harness drops a few variables a parent cloud Claude session sets, without which project hooks
+  don't run in the child sessions.
 - **Allowed tools.** Read/Edit/Write/Glob/Grep, the Skill tool, and Bash limited to `ens`, `python`,
   `git`, `ls`, `cat`, `head`, `grep`, `mkdir`, with `--permission-mode acceptEdits`. Anything else is
   refused rather than asked, which shows up in the transcript.

@@ -47,7 +47,10 @@ ALLOWED_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "TodoWrite", "Skill",
 NUDGE = ("This project uses Ensemble for long-lived memory (the `ensemble` skill, `ens` in Bash). "
          "Use it as the skill describes.")
 INHERITED_DROP = ("CLAUDE_MEMORY_STORES", "CLAUDE_COWORK_MEMORY_PATH_OVERRIDE", "CLAUDE_ADDITIONAL_DIRECTORIES",
-                  "CLAUDE_CODE_CHILD_NOTES_DIR")
+                  "CLAUDE_CODE_CHILD_NOTES_DIR",
+                  # set when the harness itself runs inside a cloud Claude session; with them, project
+                  # hooks (the SessionStart `ens --listen`) silently don't run
+                  "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_IGNORE_PERSISTED_TRUST")
 NIGHT_PROMPT = "Run the ensemble-night skill now: dreams, poems and excursions. Then summarize what changed."
 
 
@@ -283,8 +286,8 @@ def commit_work(r, project, msg):
 
 
 def advance(r, project, beats):
-    # Nothing in Ensemble advances the beat except `ens next-beat`, and the skill doesn't say when.
-    # Guess: one beat per session, so fading and spaced promotion happen at all. Set "beats": 0 to test without.
+    # The SessionStart hook advances one beat per new session. Extra beats here model time passing
+    # between sessions (scenario "beats_per_session" or a step's "beats"; default 0).
     for _ in range(beats):
         r.ens(project, "next-beat")
 
@@ -380,7 +383,7 @@ def cmd_play(a):
     prog = rd(prog_path, {"done": []})
     steps = expand(sc["steps"])
     nudge_default = sc.get("nudge", True)
-    beats = sc.get("beats_per_session", 1)
+    beats = sc.get("beats_per_session", 0)
     for i, s in enumerate(steps):
         if i in prog["done"]:
             continue
@@ -655,7 +658,7 @@ def main(argv=None):
     p = add("session", cmd_session, "run", "project", claude=True)
     p.add_argument("task", nargs="?")
     p.add_argument("--prompt")
-    p.add_argument("--beats", type=int, default=1)
+    p.add_argument("--beats", type=int, default=0)
     add("night", cmd_night, "run", "project", claude=True)
     add("reunion", cmd_reunion, "run")
     add("milestone", cmd_milestone, "run", "project", "note")

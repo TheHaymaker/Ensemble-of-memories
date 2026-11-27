@@ -38,7 +38,7 @@ import numpy as np
 GAMMA = {0: 0.80, 1: 0.95, 2: 0.99}
 TIER = {0: "short", 1: "intermediate", 2: "long"}
 PROMOTE_AT = {1: 2, 2: 5}         # spaced uses needed to reach consolidation level
-SPACING = 3                        # beats between uses for a use to count as spaced
+SPACING = 2                        # beats between uses for a use to count as spaced (a beat is a session)
 DORMANT = 0.05
 BUFF0, FLOOR_CAP = 0.02, 0.15      # n-th buff adds BUFF0 / n, floor never exceeds the cap
 S_MAX = 1.0
@@ -46,10 +46,12 @@ REVIVE = 0.5                       # similarity x cue strength needed to wake a 
 REVIVED_AT = 0.6
 RECALL_MIN = 0.3                   # similarity needed for an active memory to count as recalled
 SUMMARY_K = 12
+SUMMARY_IDEAS = 2                  # unconfirmed dream ideas shown in the summary, after waking memories
 SLOW_CAP = 3.0                     # dream buffs: decay exponent divided by (1 + slow), slow <= cap
 FRUITLESS_K = 5                    # dream exposures with no connection before a dormant memory may go
 MIN_AGE = 50                       # ...and beats untouched, times (1 + uses + 2 x revivals)
 SLEEP_PRESSURE = 30                # new waking memories that make sleep due
+INSIGHT_OPS = ("add", "qualify", "tension")   # verdicts whose insight is stored as a new memory
 DREAM_SOURCES = ("dream", "qualify", "tension", "poem", "probe", "excursion", "prediction")
 IMAGINED = ("poem", "probe", "excursion", "prediction")   # language and play: never referents, never facts
 PRECISION_MARGIN = 0.02            # an alias must be this much closer to its memory than to any other
@@ -342,15 +344,25 @@ class MemoryStore:
 
     # ---------------------------------------------------------------- summary
     def _summary_text(self, idx):
+        """The strongest memories, what was learned awake first. Nights make several ideas for every
+        waking memory (5 to 1 in real runs), so unconfirmed ideas get at most SUMMARY_IDEAS lines, after
+        the rest, and imagined ones (poems, probes, excursions, predictions) none: recall finds them."""
         now = idx["beat"]
         active = [(self.strength(m, now), mid, m) for mid, m in idx["m"].items()
                   if not m["dormant"] and not m.get("lesson")]
         n_lessons = sum(1 for m in idx["m"].values() if m.get("lesson"))
         active.sort(reverse=True, key=lambda x: x[0])
         n_dormant = sum(m["dormant"] for m in idx["m"].values())
-        lines = [f"beat {now} | {len(active)} active, {n_dormant} dormant, {n_lessons} lessons | strongest {min(self.k, len(active))}:"]
-        for s, mid, m in active[: self.k]:
-            tag = " (imagined)" if m.get("src") in IMAGINED and m.get("origin") != "confirmed" else ""
+        imagined = [a for a in active if a[2].get("src") in IMAGINED and a[2].get("origin") != "confirmed"]
+        ideas = [a for a in active if a[2].get("origin") == "dream" and a not in imagined]
+        known = [a for a in active if a not in imagined and a not in ideas]
+        n_ideas = min(SUMMARY_IDEAS, len(ideas))
+        shown = known[: self.k - n_ideas] + ideas[:n_ideas]
+        n_night = len(ideas) + len(imagined)
+        lines = [f"beat {now} | {len(known)} active, " + (f"{n_night} ideas from nights, " if n_night else "")
+                 + f"{n_dormant} dormant, {n_lessons} lessons | strongest {len(shown)}:"]
+        for s, mid, m in shown:
+            tag = " (idea, unconfirmed)" if m.get("origin") == "dream" else ""
             lines.append(f"{mid} {TIER[m['c']][:5]} {s:.2f}{tag}: {m['head'][:80]}")
         return "\n".join(lines)
 
@@ -687,7 +699,7 @@ class MemoryStore:
         elif op == "tension":
             for m in (a, b):
                 self._reanchor(m, now); m["touch"] = now
-        if v.get("insight"):
+        if v.get("insight") and op in INSIGHT_OPS:      # reinforce and replace say nothing the pair doesn't
             source = {"qualify": "qualify", "tension": "tension"}.get(op, "dream")
             key = f"{min(ai, bi)}|{max(ai, bi)}|{op}"
             seen = idx.setdefault("dream_pairs", {})

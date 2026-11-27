@@ -23,7 +23,8 @@ Environment:
     ENSEMBLE_EMBEDDER   keywords (default) | model2vec | gemini | st   (fixed once a store exists)
     ENSEMBLE_SLEEP_AT   new memories that make sleep due (default 30)
 
-`ens --listen` prints the conductor's view, never failing: use it as a SessionStart hook.
+`ens --listen` prints the conductor's view, never failing: use it as a SessionStart hook. On a new
+session (the hook's input says source "startup") it first advances the beat: one session, one beat.
 """
 import json
 import os
@@ -485,6 +486,19 @@ Every command takes --agent NAME (default conductor) and --help. JSON for *-appl
 named .ensemble-* is deleted once applied), stdin, or one argument."""
 
 
+def session_started():
+    """True when Claude Code's SessionStart hook says a new session started (not a resume, /clear or
+    compaction). Nothing else moves Ensemble's clock in everyday use, so without this, memories never
+    fade or get spaced promotions."""
+    import select
+    try:
+        if sys.stdin is None or sys.stdin.isatty() or not select.select([sys.stdin], [], [], 1.0)[0]:
+            return False                                       # run by hand, or nothing piped in
+        return json.loads(sys.stdin.read() or "{}").get("source") == "startup"
+    except (ValueError, OSError, AttributeError):
+        return False
+
+
 def cli(argv):
     import inspect
     if not argv or argv[0] in ("-h", "--help", "help"):
@@ -493,6 +507,8 @@ def cli(argv):
         serve_mcp(); return 0
     if argv[0] == "--listen":                                  # SessionStart hook
         try:
+            if session_started():                              # a new session is one beat of the clock
+                player("conductor").next_beat()
             print("Ensemble (this project's shared memory):\n" + listen_text())
         except Exception as err:                               # never block a session start
             print(f"Ensemble unavailable: {err}")

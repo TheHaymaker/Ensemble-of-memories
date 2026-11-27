@@ -109,6 +109,18 @@ def test_the_hook_never_blocks_a_session():
     return "with an unusable ENSEMBLE_HOME the SessionStart hook prints a note instead of failing"
 
 
+def test_a_new_session_is_one_beat():
+    """Only next-beat moved the clock, and nothing calls it in everyday use, so memories never faded or
+    got spaced promotions. The SessionStart hook now advances one beat on a new session."""
+    h = tempfile.mkdtemp()
+    run(["remember", "deploys go out on tuesdays"], h)
+    hook = lambda source: run(["--listen"], h, stdin=json.dumps({"hook_event_name": "SessionStart", "source": source}))
+    assert "beat 1" in hook("startup") and "beat 2" in hook("startup")
+    assert "beat 2" in hook("resume") and "beat 2" in hook("compact")       # not a new session
+    assert "beat 2" in run(["--listen"], h, stdin="")                       # run by hand
+    return "startup advances the beat; resume, compact and a manual --listen don't"
+
+
 def test_projects_follow_the_working_folder_and_join_the_family():
     h = tempfile.mkdtemp()
     a, b = os.path.join(h, "alpha"), os.path.join(h, "beta")

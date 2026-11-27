@@ -26,6 +26,9 @@ mean nothing: answer `none`. Otherwise:
 - `subtract`: one contradicts the other and is wrong. `keep` is the right one.
 - `tension`: they conflict and you cannot tell which holds; describe the conflict (it goes to a vote).
 
+Only `add`, `qualify` and `tension` insights are kept, as new memories; leave `insight` null for the
+rest. An insight is a claim about the project that would help a later session decide something,
+not a to-do ("add a test for ...") and not a restatement of the pair. When in doubt, `none`.
 Prefer `qualify` or `tension` to discarding a lesson that may still be valuable. Imagined memories
 can only be linked or reinforced. Then:
 

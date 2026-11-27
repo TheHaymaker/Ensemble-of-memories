@@ -2,7 +2,7 @@
   "about": "The whole kitchen family across three generations, plus an unrelated project, with nights, reunions and a coming of age. About 24 sessions and 7 nights with Claude.",
   "env": {"ENSEMBLE_SLEEP_AT": "6"},
   "nudge": true,
-  "beats_per_session": 1,
+  "beats_per_session": 0,
   "steps": [
     {"do": "sessions", "project": "recipe-core", "tasks": ["float-display", "unicode-fractions", "plural-glass", "flour-grams"]},
     {"do": "night", "project": "recipe-core"},

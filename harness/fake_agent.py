@@ -21,8 +21,8 @@ def _rng(*parts):
 
 
 def session(r, project, task):
-    calls = ["ens listen"]
-    r.ens(project, "listen")
+    calls = ["ens --listen (hook)"]
+    r.ens(project, "--listen", stdin='{"hook_event_name": "SessionStart", "source": "startup"}')   # as the hook does
     found = r.ens(project, "recall", task.get("title") or task["prompt"][:80])
     calls.append("ens recall")
     for line in found.splitlines():

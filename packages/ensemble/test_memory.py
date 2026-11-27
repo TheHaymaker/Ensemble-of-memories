@@ -119,6 +119,26 @@ def _worker(args):
     return len(ids)
 
 
+def test_nights_do_not_crowd_out_what_was_learned():
+    """In real runs nights made about 5 ideas per waking memory, and listen shows only the top 5 lines."""
+    s = MemoryStore(tempfile.mkdtemp())
+    real = [s.remember(f"decision {i}: money is integer cents in module {i}", 0.4) for i in range(3)]
+    for i in range(8):
+        s.remember(f"poem line {i}", 0.9, "poem")
+        s.remember(f"dream idea {i} linking cents and packs", 0.9, "dream")
+    lines = s.summary().splitlines()
+    assert all(any(r in l for l in lines[1:4]) for r in real), lines          # waking first, despite lower strength
+    assert not any("poem line" in l for l in lines) and sum("(idea, unconfirmed)" in l for l in lines) == 2
+    assert "3 active, 16 ideas from nights" in lines[0]
+    a, b = real[0], real[1]
+    n = len(s.rows())
+    s.sleep(lambda x, y, sim: {"op": "reinforce", "score": 0.9, "insight": "they agree"}, cycles=1,
+            pairs_per_cycle=4, plan=[[(a, b)]])
+    assert s._load()["m"][a]["dream_links"] == 1                             # the pair was judged...
+    assert len(s.rows()) == n                                                 # ...and its reinforce insight added nothing
+    return "summary: waking memories first, 2 unconfirmed ideas, no poems; reinforce insights aren't stored"
+
+
 def test_concurrent_agents():
     s = fresh("conc")
     with mp.Pool(8) as pool:
