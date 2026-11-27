@@ -119,6 +119,26 @@ def _worker(args):
     return len(ids)
 
 
+def test_recall_finds_what_real_sessions_asked_for():
+    """Cues from real Claude sessions (harness/data/recall-saga1.json): short, in other words than the memory."""
+    s = MemoryStore(tempfile.mkdtemp())
+    cup = s.remember("convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, "
+                     "spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because "
+                     "kosher vs table salt differ about 2x")
+    week = s.remember("plan_week always plans Monday..Sunday of the week containing start (default today)")
+    expiry = s.remember("Expiry is counted in local calendar days (date subtraction), never timedelta.days or "
+                        "utcnow(): those made tomorrow's milk read 0 days at 11pm and hid yesterday's expired items.")
+    s.remember("The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is "
+               "a count unit and salt is excluded from GRAMS_PER_CUP.", source="dream")
+    got = lambda cue: [h["id"] for h in s.recall(cue, 0.5)]
+    assert got("which day does the week start, Monday or Sunday")[:1] == [week]
+    assert got("GRAMS_PER_CUP density")[:1] == [cup]                       # the waking memory before the dream's idea
+    hits = s.recall("how should expiry dates be stored and serialized to JSON", 0.5)
+    assert [h["id"] for h in hits] == [expiry] and hits[0]["how"] == "weak"
+    assert s._load()["m"][expiry]["uses"] == 0                                # shown, not counted as a use
+    return "real cues find their memory; waking memories outrank dream ideas; weak matches aren't counted as uses"
+
+
 def test_concurrent_agents():
     s = fresh("conc")
     with mp.Pool(8) as pool:
