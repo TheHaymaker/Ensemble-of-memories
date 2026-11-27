@@ -23,6 +23,11 @@ reviewer, tester, ...); the main session is the conductor (the default).
    finish a task, use-memory each one you relied on, including ones `ens listen` showed you.
 4. When you learn or decide something worth keeping: `ens remember "one plain sentence" --importance 0.7`.
    Remember decisions, constraints, gotchas and why. Not chatter, not things git already records.
+   **When it overturns something already remembered** (the user changed a rule, a decision was
+   reversed, a fact went stale), say which memory it replaces: `ens remember "..." --replaces m00003`.
+   Check `ens listen` and `ens recall` for the old one's id first. If `remember` answers "Close to:
+   m00003 ..." and the new memory does overturn it, run `ens replace-memory m00003 m00009`. A replaced
+   memory stops being shown, recalled or handed down to child projects, so a stale rule can't come back.
 5. Keep your note current: `ens write-note "what I am doing, what I need"` (overwrites; not a log).
 
 ## Decisions with other agents
@@ -34,7 +39,8 @@ reviewer, tester, ...); the main session is the conductor (the default).
 ## Labels to respect
 
 - "(imagined)" memories came from dreams, poems or excursions. They are ideas, never facts.
-- "OUTDATED: see m00007" means a newer memory replaced it: use the newer one.
+- "OUTDATED: see m00007" means a newer memory replaced it: use the newer one. "current answer,
+  replaces m00003" in recall means the cue matched an overturned memory and this is what replaced it.
 - "family saying/heirloom ... advice only" is what a relative project or earlier generation knew. Adopt it (`ens adopt-saying s0004`)
   only if it fits, then use it to confirm it.
 

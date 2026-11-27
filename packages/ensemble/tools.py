@@ -200,9 +200,26 @@ class Player:
 
     # ------------------------------------------------------------- memory
     @_safe
-    def remember(self, text: str, importance: float) -> str:
-        """Store something in your own long-lived memory. importance is 0 to 1."""
-        return f"stored {self.memory.remember(text, importance, source=self.name)}"
+    def remember(self, text: str, importance: float, replaces: str = "") -> str:
+        """Store something in your own long-lived memory. importance is 0 to 1. If it overturns
+        an earlier memory (a decision changed, a fact went stale), give that memory's id in
+        replaces (comma-separated for several): the old one stops being shown or handed down."""
+        old = [x.strip() for x in (replaces or "").split(",") if x.strip()]
+        mid = self.memory.remember(text, importance, source=self.name, replaces=old)
+        if old:
+            return f"stored {mid}, replacing {', '.join(old)}"
+        near = self.memory.near(mid, k=2)
+        if not near:
+            return f"stored {mid}"
+        return (f"stored {mid}. Close to: " + "; ".join(f'{n["id"]} "{n["head"][:70]}"' for n in near)
+                + f". If {mid} overturns one of these, run: ens replace-memory OLD_ID {mid}")
+
+    @_safe
+    def replace_memory(self, old_id: str, new_id: str) -> str:
+        """Mark memory old_id as overturned by new_id (both already stored). The old one leaves the
+        summary and recall (recall shows new_id instead), and is never handed down to the family."""
+        self.memory.replace(old_id, new_id)
+        return f"{old_id} is now replaced by {new_id}"
 
     @_safe
     def recall(self, cue: str, strength: float) -> str:
@@ -211,6 +228,7 @@ class Player:
         hits = self.memory.recall(cue, strength)
         lines = [f"{h['id']} [{h['how']}, {h['tier']}, sim {h['similarity']}"
                  + (f", OUTDATED: see {h['superseded_by']}" if h.get("superseded_by") else "")
+                 + (f", current answer, replaces {', '.join(h['replaces'])}" if h["how"] == "replacement" else "")
                  + f"] {self.memory.describe(h['id'])}" for h in hits]
         if self.family is not None:                 # relatives may have met this before
             lines += self._family_lines(self.family._load(), self.family.advice(self.member, cue, k=3))
@@ -219,6 +237,9 @@ class Player:
     @_safe
     def use_memory(self, memory_id: str) -> str:
         """Mark that you relied on a memory. It gets stronger and permanently harder to forget."""
+        row = next((r for r in self.memory.rows() if r["id"] == memory_id), None)
+        if row and row.get("superseded_by"):        # relying on what was overturned should not revive it
+            return f"{memory_id} was replaced by {row['superseded_by']}: use that one instead (nothing changed)"
         r = self.memory.use(memory_id)
         return f"{r['id']} now {r['tier']} {r['strength']:.2f}"
 
@@ -244,7 +265,7 @@ class Player:
         if self.name == self.e.conductor:
             base += [self.open_question, self.close_question, self.next_beat]
         if self.memory is not None:
-            base += [self.remember, self.recall, self.use_memory, self.lessons]
+            base += [self.remember, self.replace_memory, self.recall, self.use_memory, self.lessons]
         if self.family is not None:
             base.append(self.adopt_saying)
         return base

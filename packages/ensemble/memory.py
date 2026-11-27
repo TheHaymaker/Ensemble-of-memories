@@ -47,6 +47,7 @@ REVIVED_AT = 0.6
 RECALL_MIN = 0.3                   # similarity needed for an active memory to count as recalled
 CUE_MIN = 0.2                      # keywords only: weaker matches are shown to the agent but not buffed
 PREFIX = 5                         # keywords only: words sharing this many first letters match in recall
+NEAR_MIN = 0.4                     # keyword overlap at which `remember` asks whether a memory was overturned
 IDEA_RANK = 0.7                    # in recall, an unconfirmed idea ranks as if this much less similar
 SUMMARY_K = 12
 SUMMARY_IDEAS = 2                  # unconfirmed dream ideas shown in the summary, after waking memories
@@ -256,18 +257,83 @@ class MemoryStore:
             m["revivals"] += 1
 
     # -------------------------------------------------------------------- API
-    def remember(self, text, importance=0.5, source="", parents=None):
-        """Store a new short-term memory. Returns its id."""
+    def remember(self, text, importance=0.5, source="", parents=None, replaces=()):
+        """Store a new short-term memory. Returns its id. replaces: ids of memories this one
+        overturns (a decision changed, a fact went stale); they are marked replaced at once."""
         vec = self.emb.encode([text], "memory")[0] if self.emb else None     # outside the lock
         for kw, tvec, w in self.sensitivities:            # an inherited mark makes this feel more important
             sim = float(tvec @ vec) if (tvec is not None and vec is not None) else overlap(keywords(text), kw)
             if sim >= 0.8 * self.recall_min:
                 importance = min(S_MAX, importance + 0.4 * w)
         with self._txn() as idx:
+            for old in replaces or ():
+                if old not in idx["m"]:
+                    raise KeyError(f"no memory {old} to replace")
             mid = self._add(idx, text, importance, source, parents, vec)
+            for old in replaces or ():
+                self._replace(idx, old, mid)
             if source not in DREAM_SOURCES:
                 self._check_predictions(idx, mid, vec)
             return mid
+
+    def replace(self, old, new):
+        """Mark memory `old` as overturned by `new` (both already stored). From then on `old` is left
+        out of the summary, recall shows `new` in its place, and a family never hands it down."""
+        with self._txn() as idx:
+            for mid in (old, new):
+                if mid not in idx["m"]:
+                    raise KeyError(f"no memory {mid}")
+            if old == new or self.current(idx, new) == old:
+                raise ValueError(f"{old} cannot replace itself")
+            self._replace(idx, old, new)
+            return self._row(old, idx["m"][old], idx["beat"])
+
+    def _replace(self, idx, old, new):
+        now, m = idx["beat"], idx["m"][old]
+        if m.get("lesson"):
+            self._demote(m, now)
+        self._weaken(m, now, by=new)
+        m["replaced_at"] = now
+        idx["m"][new].setdefault("replaces", []).append(old)
+        idx["overturned"] = idx.get("overturned", 0) + 1
+        for t in idx.get("tensions", {}).values():          # the session settled it awake
+            if t["status"] == "open" and old in (t["a"], t["b"]):
+                t["status"] = f"resolved:replaced:{new}"
+
+    @staticmethod
+    def current(idx, mid):
+        """Follow a chain of replacements to the memory that stands now."""
+        seen = set()
+        while idx["m"][mid].get("superseded_by") in idx["m"] and mid not in seen:
+            seen.add(mid)
+            mid = idx["m"][mid]["superseded_by"]
+        return mid
+
+    @staticmethod
+    def standing(idx, mid):
+        """Uses, counting those of the memories it replaced: reliance on a topic moves to its current answer."""
+        m = idx["m"][mid]
+        return m["uses"] + sum(idx["m"][o]["uses"] for o in m.get("replaces", []) if o in idx["m"])
+
+    def near(self, mid, k=3):
+        """Standing memories closest to `mid` (no buffs): candidates a new memory may have overturned."""
+        idx = self._load()
+        m = idx["m"][mid]
+        V = self._vectors()
+        out = []
+        for oid, o in idx["m"].items():
+            if oid == mid or o["dormant"] or o.get("superseded_by") or o.get("merged_into") \
+                    or o.get("src") in IMAGINED or o.get("origin") == "dream":
+                continue
+            if "vi" in m and "vi" in o and V.size and not getattr(self.emb, "hybrid", False):
+                sim = float(V[m["vi"]].astype(np.float32) @ V[o["vi"]].astype(np.float32))
+                floor = self.recall_min
+            else:
+                sim, floor = overlap(set(m["kw"]), set(o["kw"])), NEAR_MIN
+            if sim >= floor:
+                out.append((sim, oid))
+        out.sort(reverse=True)
+        return [dict(self._row(oid, idx["m"][oid], idx["beat"]), similarity=round(sim, 2)) for sim, oid in out[:k]]
 
     def _add(self, idx, text, importance, source, parents, vec):
         mid = f"m{idx['next']:05d}"
@@ -309,11 +375,16 @@ class MemoryStore:
             hybrid = getattr(self.emb, "hybrid", False)
             recall_min, cue_min, revive = ((RECALL_MIN, CUE_MIN, REVIVE) if hybrid
                                            else (self.recall_min, self.cue_min, self.revive))
-            hits, near = [], None
+            hits, near, stale = [], None, {}
             for mid, m in idx["m"].items():
                 vsim = (max([float(sims[m["vi"]])] + [float(sims[r]) for r in m.get("avi", [])])
                         if sims is not None else None)
                 sim = cue_overlap(ckw, m["kw"]) if (vsim is None or hybrid) else vsim
+                if m.get("superseded_by") in idx["m"]:     # overturned: its replacement answers instead
+                    if sim >= cue_min:
+                        cur = self.current(idx, mid)
+                        stale[cur] = max(stale.get(cur, (0, ""))[0], sim), mid
+                    continue
                 if m["dormant"]:
                     if sim * cue_strength >= revive:
                         self._invoke(m, now, 0.0, revived=True)
@@ -326,8 +397,12 @@ class MemoryStore:
                     rank = vsim * (1.0 if m.get("origin", "waking") in ("waking", "confirmed") else IDEA_RANK)
                     if near is None or rank > near[0]:
                         near = (rank, (vsim, mid, "weak"))
-            if not hits and near:            # hybrid: no keyword matched, show the model's best guess
+            if not hits and not stale and near:   # hybrid: no keyword matched, show the model's best guess
                 hits = [near[1]]
+            got = {h[1] for h in hits}
+            for cur, (sim, old) in stale.items():
+                if cur not in got:
+                    hits.append((sim, cur, "replacement"))
             # What was learned awake outranks a dream's or a poem's idea about it at a similar match.
             hits.sort(reverse=True, key=lambda h: h[0] * (1.0 if idx["m"][h[1]].get("origin", "waking")
                                                           in ("waking", "confirmed") else IDEA_RANK))
@@ -359,6 +434,8 @@ class MemoryStore:
              "floor": round(m["floor"], 3), "uses": m["uses"], "revivals": m["revivals"], "head": m["head"]}
         if m.get("superseded_by"):
             r["superseded_by"] = m["superseded_by"]
+        if m.get("replaces"):
+            r["replaces"] = list(m["replaces"])
         return r
 
     def rows(self):
@@ -380,8 +457,8 @@ class MemoryStore:
         waking memory (5 to 1 in real runs), so unconfirmed ideas get at most SUMMARY_IDEAS lines, after
         the rest, and imagined ones (poems, probes, excursions, predictions) none: recall finds them."""
         now = idx["beat"]
-        active = [(self.strength(m, now), mid, m) for mid, m in idx["m"].items()
-                  if not m["dormant"] and not m.get("lesson")]
+        active = [(self.strength(m, now), mid, m) for mid, m in idx["m"].items()     # replaced: never briefed
+                  if not m["dormant"] and not m.get("lesson") and not m.get("superseded_by") and not m.get("merged_into")]
         n_lessons = sum(1 for m in idx["m"].values() if m.get("lesson"))
         active.sort(reverse=True, key=lambda x: x[0])
         n_dormant = sum(m["dormant"] for m in idx["m"].values())
