@@ -26,11 +26,12 @@ import json
 import os
 from contextlib import contextmanager
 
-from memory import MemoryStore, keywords, overlap
+from memory import IMAGINED, MemoryStore, keywords, overlap
 
 TRAITS = ("curiosity", "skepticism", "steadiness", "expressiveness")
 NEUTRAL = {t: 0.5 for t in TRAITS}
 CAP_SAYINGS, CAP_HEIRLOOMS, CAP_WISDOM, CAP_MARKS = 60, 12, 20, 10
+BIRTH_SAYINGS = 3               # a parent's most relied-on memories, told to a newborn child as sayings
 DRIFT, DRIFT_MIN = 0.15, 3      # share of waking knowledge overturned (and at least this many) = drift
 AGE_NIGHTS = 60                  # nights in one generation before age alone suggests coming of age
 SNOOZE = 14                      # nights a declined suggestion stays quiet
@@ -151,7 +152,7 @@ class Family:
                 "poem_pairs": 1 + round(3 * traits["expressiveness"]),
                 "min_score": round(0.4 + 0.3 * traits["skepticism"], 2),
                 "confirm_uses": 2 + round(2 * traits["skepticism"]),
-                "lesson_uses": round(10 - 4 * traits["steadiness"])}
+                "lesson_uses": round(5 - 2 * traits["steadiness"])}
 
     # ---------------------------------------------------------------- marks
     def mark(self, name, theme, strength=1.0, note=""):
@@ -176,8 +177,10 @@ class Family:
         return out
 
     # ---------------------------------------------------------------- birth
-    def birth(self, name, memory_root, parents=()):
-        """A new project, taking after its relatives."""
+    def birth(self, name, memory_root, parents=(), hand_down=True):
+        """A new project, taking after its relatives. Each parent also tells the child its most
+        relied-on memories as sayings (advice only), so a child born before its parent has any
+        lessons still hears what the parent knows. Coming of age passes heirlooms instead."""
         parents = list(parents)
         with self._txn() as fam:
             if name in fam["members"]:
@@ -203,7 +206,30 @@ class Family:
                                     "gen": 1 + max((fam["members"][p]["gen"] for p in parents), default=0),
                                     "born_traits": born, "marks": sorted(inherited, key=lambda m: -m["strength"])[:CAP_MARKS]}
         MemoryStore(memory_root, self.emb)
-        return {"traits": born, "marks": inherited, "settings": self.expression(born)}
+        told = sum(self.tell_at_birth(p) for p in parents) if hand_down else 0
+        return {"traits": born, "marks": inherited, "settings": self.expression(born), "told": told}
+
+    def tell_at_birth(self, parent, k=BIRTH_SAYINGS):
+        """A parent's strongest everyday knowledge (lessons first, then by use and strength), as sayings."""
+        s = self.store(parent)
+        idx = s._load()
+        now = idx["beat"]
+        pool = [(bool(m.get("lesson")), m["uses"], s.strength(m, now), mid) for mid, m in idx["m"].items()
+                if m.get("origin", "waking") in ("waking", "confirmed") and m.get("src") not in IMAGINED
+                and not m.get("superseded_by") and not m.get("merged_into") and not m["dormant"]]
+        told = 0
+        with self._txn() as fam:
+            gen = fam["members"][parent]["gen"]
+            for _, _, _, mid in sorted(pool, reverse=True)[:k]:
+                text = s.read(mid)
+                if any(overlap(keywords(text), keywords(x["text"])) >= SIMILAR for x in fam["sayings"].values()):
+                    continue
+                sid = f"s{fam['next']:04d}"; fam["next"] += 1
+                fam["sayings"][sid] = {"text": text, "from": parent, "gen": gen, "weight": 0.5,
+                                       "confirmed_by": [], "contradicted_by": [], "told": "birth"}
+                told += 1
+            self._cap(fam)
+        return told
 
     def attach(self, player):
         """Make a Player take after its family: settings from traits, sensitivities from marks."""
@@ -276,6 +302,21 @@ class Family:
             rel = overlap(ckw, keywords(h["text"]))
             if rel >= 0.25:
                 found.append((rel * 1.5, "heirloom", hid, h))
+        found.sort(key=lambda x: -x[0])
+        return [{"kind": kind, "id": i, "item": it} for _, kind, i, it in found[:k]]
+
+    def inheritance(self, name, k=3):
+        """What this member was handed, for when nothing is open to match advice against: heirlooms
+        from its own predecessor first, then sayings from its ancestors, closest and weightiest first."""
+        fam = self._load()
+        anc = self._ancestors(fam, name)
+        found = []
+        for hid, h in fam["heirlooms"].items():
+            if h["from"] in anc:
+                found.append((3.0 / anc[h["from"]], "heirloom", hid, h))
+        for sid, sv in fam["sayings"].items():
+            if sv["from"] in anc and sv["weight"] > 0:
+                found.append((self.closeness(fam, name, sv["from"]) * (1 + 0.5 * sv["weight"]), "saying", sid, sv))
         found.sort(key=lambda x: -x[0])
         return [{"kind": kind, "id": i, "item": it} for _, kind, i, it in found[:k]]
 
@@ -399,7 +440,7 @@ class Family:
         base = name.split("@")[0]
         n = int(name.split("@")[1]) + 1 if "@" in name else 2
         child = f"{base}@{n}"
-        born = self.birth(child, memory_root, [name, *extra_parents])
+        born = self.birth(child, memory_root, [name, *extra_parents], hand_down=False)
         with self._txn() as fam:
             fam["members"][child]["came_of_age"] = {"from": name, "why": why}
             if name in fam.get("suggestions", {}):

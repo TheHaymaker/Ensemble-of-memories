@@ -90,8 +90,14 @@ def test_projects_follow_the_working_folder_and_join_the_family():
     who = json.loads(run(["whoami"], h, project=None, cwd=b))
     fam = json.load(open(os.path.join(h, "family", "family.json")))
     assert who["project"] == "beta" and fam["members"]["beta"]["parents"] == ["alpha"]
-    assert "alpha thing" not in run(["listen"], h, project=None, cwd=b)
-    return "each folder is its own project with its own memory; ENSEMBLE_PARENTS made beta a child of alpha"
+    heard = run(["listen"], h, project=None, cwd=b)
+    own = [l for l in heard.splitlines() if l.startswith("  m0")]
+    assert not any("alpha thing" in l for l in own), heard           # not in beta's own memory...
+    assert any(l.startswith("family saying") and "alpha thing" in l and "your parent" in l
+               for l in heard.splitlines()), heard                     # ...but told to it at birth, as advice
+    assert "family saying" in run(["recall", "alpha thing"], h, project=None, cwd=b)
+    return ("each folder is its own project with its own memory; ENSEMBLE_PARENTS made beta a child of alpha, "
+            "and alpha's knowledge reaches beta as advice")
 
 
 def test_mcp_mode():

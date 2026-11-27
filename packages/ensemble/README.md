@@ -207,8 +207,8 @@ Unconfirmed dream ideas get half the grace. A cheap similarity screen counts a d
 
 **Lessons** form at the end of a night from memories that:
 - were learned or confirmed while awake;
-- have been used 8 or more times;
-- have been long-term for 3 nights;
+- have been used 4 or more times (3 to 5, by the family's steadiness);
+- have been consolidated (intermediate or long-term) for 2 nights;
 - have been reinforced in a dream;
 - are neither outdated nor in an open dispute.
 
@@ -250,6 +250,11 @@ Projects form a family: resemblance, not rules. Each project keeps its own memor
   - **Inheritance:** marks pass parent to child at half strength, so a grandparent's arrives as a quarter, unless a calm parent let it fade first.
   - **Renewal and fading:** a similar experience renews a mark at full strength; a calm life fades an inherited one by 0.85 per night.
   - **Effect:** a marked agent gives related memories more importance.
+- **Told at birth:** when a child project is born, each parent tells it its 3 most relied-on memories
+  (lessons first) as sayings, so a young parent with no lessons yet still passes on what it knows.
+- **Heard without asking:** `listen()` shows advice matching the open questions; with none open, it
+  shows what this member was handed (heirlooms from its predecessor, then its ancestors' sayings).
+  `recall()` also returns family advice matching the cue.
 - **Sayings:** lessons told as family advice, shown in `listen()` when relevant as "advice only", with who learned them and how far back. They carry no authority. `adopt_saying` brings one into the agent's memory as an inherited idea that must be confirmed by use. Reunions raise the weight of sayings that were confirmed and lower those that were voted down.
 - **Heirlooms:** a few specific memories handed down intact, with their context.
 - **Reunions:** members tell their lessons, adopted sayings are scored, and lessons that recur across members become family wisdom.

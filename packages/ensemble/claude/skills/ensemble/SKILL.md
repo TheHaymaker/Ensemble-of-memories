@@ -16,8 +16,11 @@ reviewer, tester, ...); the main session is the conductor (the default).
    memories, any lesson or family advice relevant to an open question, and suggestions.
 2. Before deciding something that might have been decided before: `ens recall "the question in plain words"`.
    Use `--strength 0.9` only when it really matters: strong, close cues wake dormant memories.
-3. When you rely on a recalled memory: `ens use-memory m00012`. This is what makes knowledge last,
-   confirms dream and family ideas, and eventually turns memories into lessons.
+   Recall also shows family advice: what a parent or earlier generation of this project knew.
+3. When a memory, lesson or saying shaped what you did, say so: `ens use-memory m00012` (for a family
+   saying, `ens adopt-saying s0004` first, then use the memory it gives you). This is the only thing that
+   makes knowledge last, confirms dream and family ideas, and turns memories into lessons. Before you
+   finish a task, use-memory each one you relied on, including ones `ens listen` showed you.
 4. When you learn or decide something worth keeping: `ens remember "one plain sentence" --importance 0.7`.
    Remember decisions, constraints, gotchas and why. Not chatter, not things git already records.
 5. Keep your note current: `ens write-note "what I am doing, what I need"` (overwrites; not a log).
