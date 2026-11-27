@@ -22,8 +22,9 @@ Environment:
     ENSEMBLE_ROSTER     players (default conductor,builder,reviewer,tester)
     ENSEMBLE_EMBEDDER   keywords (default) | hybrid | model2vec | gemini | st   (fixed once a store exists)
     ENSEMBLE_SLEEP_AT   new memories that make sleep due (default 30)
-    ENSEMBLE_NIGHT_POEMS  1 (default): a night weaves its one-line figures into a longer poem and shows
-                        the latest woven poem to dreams, poems and excursions as a lens. 0: neither.
+    ENSEMBLE_WEAVE      1 (default): a night first weaves earlier one-line figures into one longer poem
+    ENSEMBLE_POEM_LENS  1: dreams, poems and excursions see the latest woven poem as a lens (default 0:
+                        in a first blind A/B it did not make probes or excursions better; see harness/poem_ab.py)
     ENSEMBLE_EXCURSIONS excursion seeds per night (default 1)
     ENSEMBLE_NIGHT_SEED fixes which pairs and seeds a night picks (experiments: two arms see the same ones)
 
@@ -49,7 +50,8 @@ from tools import Player                      # noqa: E402
 HOME = os.path.expanduser(os.environ.get("ENSEMBLE_HOME", "~/.ensemble"))
 ROSTER = [r.strip() for r in os.environ.get("ENSEMBLE_ROSTER", "conductor,builder,reviewer,tester").split(",") if r.strip()]
 SLEEP_AT = int(os.environ.get("ENSEMBLE_SLEEP_AT", "30"))
-NIGHT_POEMS = os.environ.get("ENSEMBLE_NIGHT_POEMS", "1") != "0"
+WEAVE = os.environ.get("ENSEMBLE_WEAVE", "1") != "0"
+POEM_LENS = os.environ.get("ENSEMBLE_POEM_LENS", "0") != "0"
 EXCURSIONS = int(os.environ.get("ENSEMBLE_EXCURSIONS", "1"))
 
 
@@ -182,8 +184,8 @@ def _dry_run(agent, run):
 
 
 def _lens(agent, out):
-    """Add the latest woven poem to a night step's JSON (ENSEMBLE_NIGHT_POEMS=1)."""
-    if NIGHT_POEMS:
+    """Add the latest woven poem to a night step's JSON (ENSEMBLE_POEM_LENS=1)."""
+    if POEM_LENS:
         woven = player(agent).memory.composed()
         if woven:
             out["poem"] = {"title": woven[-1]["title"], "text": woven[-1]["text"], "read_as": LENS}
@@ -409,8 +411,8 @@ def poem_weave(agent: str = "conductor") -> str:
     """Night, first step: weave the one-line figures of earlier nights into one longer poem
     (consolidation). Answer with weave_apply. Prints {"skip": ...} when there is nothing to weave."""
     def go():
-        if not NIGHT_POEMS:
-            return json.dumps({"skip": "weaving is off (ENSEMBLE_NIGHT_POEMS=0): go on to the dreams"})
+        if not WEAVE:
+            return json.dumps({"skip": "weaving is off (ENSEMBLE_WEAVE=0): go on to the dreams"})
         seen = {}
 
         def record(figures, verses):

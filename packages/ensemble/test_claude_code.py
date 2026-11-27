@@ -117,19 +117,20 @@ def test_weave_then_the_poem_is_a_lens_in_every_step():
                                                   "aliases": {}, "verse": "v"} for x in pp]))
     shown = json.loads(run(["poem-weave"], h))
     ids = [f["id"] for f in shown["figures"]]
-    assert len(ids) >= 3 and shown["figures"][0]["from"] and "poem" not in json.loads(run(["dream-pairs"], h))
+    assert len(ids) >= 3 and shown["figures"][0]["from"]
     out = run(["weave-apply"], h, stdin=json.dumps({"title": "Quills", "text": "a\nb\nc\nd", "from": ids}))
     assert out.startswith(f"wove {len(ids)} of {len(ids)}"), out
+    assert "poem" not in json.loads(run(["dream-pairs"], h))       # the lens is off by default
+    on = {"ENSEMBLE_POEM_LENS": "1"}
     for step in ("dream-pairs", "poem-pairs", "excursion-seeds"):
-        lens = json.loads(run([step], h)).get("poem")
+        lens = json.loads(run([step], h, env_extra=on)).get("poem")
         assert lens and lens["title"] == "Quills" and "not evidence" in lens["read_as"], step
-    off = {"ENSEMBLE_NIGHT_POEMS": "0"}
-    assert "poem" not in json.loads(run(["dream-pairs"], h, env_extra=off)) and "skip" in json.loads(run(["poem-weave"], h, env_extra=off))
+    assert "skip" in json.loads(run(["poem-weave"], h, env_extra={"ENSEMBLE_WEAVE": "0"}))
     assert len(json.loads(run(["excursion-seeds"], h, env_extra={"ENSEMBLE_EXCURSIONS": "3"}))["seeds"]) == 3
     fixed = {"ENSEMBLE_NIGHT_SEED": "5"}
-    pairs = lambda poems: json.loads(run(["poem-pairs"], h, env_extra=dict(fixed, ENSEMBLE_NIGHT_POEMS=poems)))["pairs"]
+    pairs = lambda poems: json.loads(run(["poem-pairs"], h, env_extra=dict(fixed, ENSEMBLE_POEM_LENS=poems)))["pairs"]
     assert pairs("0") == pairs("1")                            # a fixed seed: both arms of an experiment see the same pairs
-    return "poem-weave -> weave-apply; the woven poem then rides along with dreams, poems and excursions (off with ENSEMBLE_NIGHT_POEMS=0)"
+    return "poem-weave -> weave-apply; the woven poem then rides along with dreams, poems and excursions (ENSEMBLE_POEM_LENS=1)"
 
 
 def test_the_hook_never_blocks_a_session():

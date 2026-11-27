@@ -3,8 +3,8 @@
 
 Two arms start from the identical memory and code state and each runs one real night per project:
 
-    control  ENSEMBLE_NIGHT_POEMS=0: today's night (dreams, one-line poems, excursions)
-    poems    ENSEMBLE_NIGHT_POEMS=1: first weave earlier one-line figures into one longer poem,
+    control  ENSEMBLE_WEAVE=0 ENSEMBLE_POEM_LENS=0: the night before weaving (dreams, one-line poems, excursions)
+    poems    ENSEMBLE_WEAVE=1 ENSEMBLE_POEM_LENS=1: first weave earlier one-line figures into one longer poem,
              then dreams, poems and excursions each see that poem as a lens
 
     python3 harness/poem_ab.py base   pab1     sessions, a first night (makes figures), more sessions
@@ -40,8 +40,9 @@ import lab  # noqa: E402
 
 PROJECTS = ["recipe-core", "pantry-tracker", "grocery-bot"]
 BEFORE, BETWEEN = 3, 1                     # sessions before the first night, and between the nights
-ARMS = {"control": {"ENSEMBLE_NIGHT_POEMS": "0"}, "poems": {"ENSEMBLE_NIGHT_POEMS": "1"}}
-BASE_ENV = {"ENSEMBLE_NIGHT_POEMS": "0", "ENSEMBLE_EXCURSIONS": "3"}
+ARMS = {"control": {"ENSEMBLE_WEAVE": "0", "ENSEMBLE_POEM_LENS": "0"},
+        "poems": {"ENSEMBLE_WEAVE": "1", "ENSEMBLE_POEM_LENS": "1"}}
+BASE_ENV = {"ENSEMBLE_WEAVE": "0", "ENSEMBLE_POEM_LENS": "0", "ENSEMBLE_EXCURSIONS": "3"}
 JUDGE_TOOLS = ["Read", "Glob", "Grep", "Write", "Bash(python3:*)", "Bash(python:*)", "Bash(ls:*)", "Bash(cat:*)"]
 
 
