@@ -18,7 +18,7 @@ reviewer, tester, ...); the main session is the conductor (the default).
    Use `--strength 0.9` only when it really matters: strong, close cues wake dormant memories.
    Recall also shows family advice: what a parent or earlier generation of this project knew.
 3. When a memory, lesson or saying shaped what you did, say so: `ens use-memory m00012` (for a family
-   saying, `ens adopt-saying s0004` first, then use the memory it gives you). This is the only thing that
+   saying or heirloom, `ens adopt-saying s0004` (or h0005) first, then use the memory it gives you). This is the only thing that
    makes knowledge last, confirms dream and family ideas, and turns memories into lessons. Before you
    finish a task, use-memory each one you relied on, including ones `ens listen` showed you.
 4. When you learn or decide something worth keeping: `ens remember "one plain sentence" --importance 0.7`.
@@ -35,7 +35,7 @@ reviewer, tester, ...); the main session is the conductor (the default).
 
 - "(imagined)" memories came from dreams, poems or excursions. They are ideas, never facts.
 - "OUTDATED: see m00007" means a newer memory replaced it: use the newer one.
-- "family saying ... advice only" is a relative project's lesson. Adopt it (`ens adopt-saying s0004`)
+- "family saying/heirloom ... advice only" is what a relative project or earlier generation knew. Adopt it (`ens adopt-saying s0004`)
   only if it fits, then use it to confirm it.
 
 ## When listen says

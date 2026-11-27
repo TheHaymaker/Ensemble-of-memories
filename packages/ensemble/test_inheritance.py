@@ -96,6 +96,8 @@ def test_a_new_generation_hears_its_heirlooms():
     heir = player(root, f, out["name"])
     heard = heir.listen()
     assert "family heirloom" in heard and "236.6 ml" in heard, heard
+    hid = next(h for h in f._load()["heirlooms"])
+    assert heir.adopt_saying(hid).startswith("adopted as m")             # heirlooms can be taken in too
     assert f._load()["sayings"] == {} or all(s.get("told") != "birth" for s in f._load()["sayings"].values())
     return "recipes@2 starts by hearing recipes' heirlooms, not an empty memory"
 

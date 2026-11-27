@@ -332,7 +332,8 @@ class Family:
 
     def adopt(self, name, saying_id):
         """Take a family saying into this member's own memory, as an unproven inherited idea."""
-        s = self._load()["sayings"][saying_id]
+        fam = self._load()
+        s = fam["sayings"].get(saying_id) or fam["heirlooms"][saying_id]
         return self.store(name).remember(s["text"], 0.5, source=f"family:{saying_id}")
 
     # -------------------------------------------------------------- reunion

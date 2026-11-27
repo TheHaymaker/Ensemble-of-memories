@@ -253,7 +253,7 @@ def lessons(agent: str = "conductor") -> str:
 
 @tool
 def adopt_saying(saying_id: str) -> str:
-    """Take a family saying into the conductor's memory as an unproven idea."""
+    """Take a family saying or heirloom (s0004, h0005) into the conductor's memory as an unproven idea."""
     return _safe(lambda: player("conductor").adopt_saying(saying_id))
 
 

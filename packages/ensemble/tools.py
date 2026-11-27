@@ -230,8 +230,12 @@ class Player:
 
     @_safe
     def adopt_saying(self, saying_id: str) -> str:
-        """Take a family saying into your own memory. It starts unproven: use it to confirm it."""
-        s = self.family._load()["sayings"][saying_id]
+        """Take a family saying or heirloom (s0004, h0005) into your own memory. It starts unproven:
+        use it to confirm it."""
+        fam = self.family._load()
+        s = fam["sayings"].get(saying_id) or fam["heirlooms"].get(saying_id)
+        if s is None:
+            return f"no family saying or heirloom {saying_id}"
         mid = self.memory.remember(s["text"], 0.5, source=f"family:{saying_id}")
         return f"adopted as {mid} (inherited, unconfirmed)"
 
