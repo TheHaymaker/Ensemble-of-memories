@@ -1,0 +1,7 @@
+numpy>=1.26
+wordfreq>=3.0
+# optional: run Ensemble as an MCP server (`ens mcp`)
+mcp>=1.2
+# optional embedders (pick one via ENSEMBLE_EMBEDDER; keywords needs nothing)
+# model2vec
+# google-genai
