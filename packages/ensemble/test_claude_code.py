@@ -126,6 +126,9 @@ def test_weave_then_the_poem_is_a_lens_in_every_step():
     off = {"ENSEMBLE_NIGHT_POEMS": "0"}
     assert "poem" not in json.loads(run(["dream-pairs"], h, env_extra=off)) and "skip" in json.loads(run(["poem-weave"], h, env_extra=off))
     assert len(json.loads(run(["excursion-seeds"], h, env_extra={"ENSEMBLE_EXCURSIONS": "3"}))["seeds"]) == 3
+    fixed = {"ENSEMBLE_NIGHT_SEED": "5"}
+    pairs = lambda poems: json.loads(run(["poem-pairs"], h, env_extra=dict(fixed, ENSEMBLE_NIGHT_POEMS=poems)))["pairs"]
+    assert pairs("0") == pairs("1")                            # a fixed seed: both arms of an experiment see the same pairs
     return "poem-weave -> weave-apply; the woven poem then rides along with dreams, poems and excursions (off with ENSEMBLE_NIGHT_POEMS=0)"
 
 

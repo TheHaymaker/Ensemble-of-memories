@@ -25,6 +25,7 @@ Environment:
     ENSEMBLE_NIGHT_POEMS  1 (default): a night weaves its one-line figures into a longer poem and shows
                         the latest woven poem to dreams, poems and excursions as a lens. 0: neither.
     ENSEMBLE_EXCURSIONS excursion seeds per night (default 1)
+    ENSEMBLE_NIGHT_SEED fixes which pairs and seeds a night picks (experiments: two arms see the same ones)
 
 `ens --listen` prints the conductor's view, never failing: use it as a SessionStart hook. On a new
 session (the hook's input says source "startup") it first advances the beat: one session, one beat.
@@ -50,6 +51,12 @@ ROSTER = [r.strip() for r in os.environ.get("ENSEMBLE_ROSTER", "conductor,builde
 SLEEP_AT = int(os.environ.get("ENSEMBLE_SLEEP_AT", "30"))
 NIGHT_POEMS = os.environ.get("ENSEMBLE_NIGHT_POEMS", "1") != "0"
 EXCURSIONS = int(os.environ.get("ENSEMBLE_EXCURSIONS", "1"))
+
+
+def _seed(step):
+    """A night step's random seed: fixed by ENSEMBLE_NIGHT_SEED (per step), else fresh."""
+    fixed = os.environ.get("ENSEMBLE_NIGHT_SEED")
+    return (int(fixed) * 7919 + step) % (1 << 30) if fixed else random.randrange(1 << 30)
 LENS = ("A poem woven on an earlier night from this memory's one-line figures. It is a lens, not "
         "evidence: let it suggest where a memory bends, what two memories share, or what to try; "
         "decide only from the memories themselves (and the code, if you check).")
@@ -281,7 +288,7 @@ def dream_pairs(agent: str = "conductor", cycles: int = 4, pairs_per_cycle: int 
     """Night, step 1: the memory pairs tonight's sleep will replay, for you to judge. Answer each
     with dream_apply. Run through the /ensemble-night skill."""
     def go():
-        seed = random.randrange(1 << 30)
+        seed = _seed(1)
         seen = []
 
         def record(a, b, sim):
@@ -329,7 +336,7 @@ def poem_pairs(agent: str = "conductor", pairs: int = 3) -> str:
     """Poem-making, step 1: disparate memory pairs to make poems from. Not sense-making: refuse
     the likely. Answer with poem_apply."""
     def go():
-        seed, seen = random.randrange(1 << 30), []
+        seed, seen = _seed(2), []
 
         def record(a, b, sim):
             seen.append({"A": _brief(a), "B": _brief(b)})
@@ -369,7 +376,7 @@ def poem_apply(poems: str, agent: str = "conductor") -> str:
 def excursion_seeds(agent: str = "conductor", n: int = 0) -> str:
     """Excursions, step 1: seeds to explore out of curiosity (silly is fine). Answer with excursion_apply."""
     def go():
-        seed, seen, k = random.randrange(1 << 30), [], n or EXCURSIONS
+        seed, seen, k = _seed(3), [], n or EXCURSIONS
 
         def record(s, context):
             seen.append({"seed": s, "context": context})

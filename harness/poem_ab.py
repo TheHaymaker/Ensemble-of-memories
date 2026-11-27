@@ -51,8 +51,8 @@ def args(**kw):
     return SimpleNamespace(**d)
 
 
-def out_dir(name):
-    d = os.path.join(lab.RUNS, f"{name}-ab")
+def out_dir(a):
+    d = os.path.join(lab.RUNS, f"{a.name}{a.tag}-ab")
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -69,8 +69,15 @@ def read_log(r):
 # ------------------------------------------------------------------ base and arms
 def cmd_base(a):
     r = lab.Run(f"{a.name}-base")
-    if not r.exists():
-        lab.new_run(r.name, a.projects, BASE_ENV, "poem_ab")
+    if not r.exists():                                 # ancestors get work copies too: a child joins after them
+        spec, every = lab.family_spec(), []
+        def up(p):
+            for q in spec.get(p, {}).get("parents", []):
+                up(q)
+            if p not in every:
+                every.append(p)
+        [up(p) for p in a.projects]
+        lab.new_run(r.name, every, BASE_ENV, "poem_ab")
     ns, done = args(model=a.model, fake=a.fake), steps_done(r)
     for p in a.projects:
         ids = [t["id"] for t in lab.tasks_of(p)]
@@ -89,12 +96,22 @@ def cmd_base(a):
         lab.say(f"{p}: {len(idx['m']) if idx else 0} memories, {len(figs)} one-line figures to weave")
 
 
+def arm_run(a, arm):
+    return lab.Run(f"{a.name}-{arm}{a.tag}")
+
+
 def cmd_arms(a):
     base = lab.Run(f"{a.name}-base").need()
     runs = {}
     for arm, env in ARMS.items():
-        r = lab.Run(f"{a.name}-{arm}")
-        runs[arm] = r if r.exists() else lab.fork_run(base.name, r.name, env)
+        r = arm_run(a, arm)
+        if not r.exists():
+            env = dict(env, **({"ENSEMBLE_NIGHT_SEED": str(a.night_seed)} if a.night_seed is not None else {}))
+            r = lab.fork_run(base.name, r.name, env)
+            # both arms run today's Ensemble code (the base may have been made with an older copy)
+            shutil.copytree(lab.PKG, r.app, dirs_exist_ok=True, ignore=shutil.ignore_patterns(
+                "test_*", "*.png", "*.wav", "*.html", "__pycache__", "simulate.py", "compare.py", "calibrate.py"))
+        runs[arm] = r
 
     def go(arm, r):
         for p in a.projects:
@@ -254,7 +271,7 @@ def render(i, item):
 
 
 def cmd_judge(a):
-    od = out_dir(a.name)
+    od = out_dir(a)
     rng = random.Random(a.seed)
     for p in a.projects:
         res_path = os.path.join(od, f"judge-{p}.json")
@@ -263,7 +280,7 @@ def cmd_judge(a):
         before = base_memories(a.name, p)
         pool = []
         for arm in ARMS:
-            got = night_items(lab.Run(f"{a.name}-{arm}"), p, before)
+            got = night_items(arm_run(a, arm), p, before)
             for it in (got or {}).get("items", []):
                 pool.append(dict(it, arm=arm))
         rng.shuffle(pool)
@@ -323,12 +340,12 @@ def fisher_two_sided(a, b, c, d):
 
 
 def cmd_report(a):
-    od = out_dir(a.name)
+    od = out_dir(a)
     rows, nights, weaves = [], {}, {}
     for p in a.projects:
         before = base_memories(a.name, p)
         for arm in ARMS:
-            got = night_items(lab.Run(f"{a.name}-{arm}"), p, before)
+            got = night_items(arm_run(a, arm), p, before)
             if got:
                 nights[(arm, p)] = got
                 if got["weave"]:
@@ -368,7 +385,7 @@ def cmd_report(a):
                                                                c[metric], c["graded"] - c[metric]), 3) \
                 if c["graded"] and t["graded"] else None
 
-    L = [f"# Woven poems in the night's context: {a.name}", "",
+    L = [f"# Woven poems in the night's context: {a.name}{a.tag}", "",
          "Two arms forked from one memory and code state; one real night per project in each. Items from both "
          "arms were shuffled together and graded blind by a Claude judge that read and ran the code.", "",
          "## Per item", "",
@@ -420,6 +437,8 @@ def main(argv=None):
     ap.add_argument("--model")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--max-turns", type=int, default=80)
+    ap.add_argument("--tag", default="", help="suffix for a second pair of arms from the same base, e.g. 2")
+    ap.add_argument("--night-seed", type=int, help="ENSEMBLE_NIGHT_SEED for both arms: identical pairs and seeds")
     ap.add_argument("--fake", action="store_true", help="offline stand-in for the sessions and nights (tests the plumbing)")
     a = ap.parse_args(argv)
     a.projects = a.projects.split(",")
