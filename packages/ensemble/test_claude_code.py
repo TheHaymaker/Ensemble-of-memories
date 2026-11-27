@@ -103,6 +103,32 @@ def test_every_verdict_given_is_applied():
     return f"all {len(pairs)} 'add' verdicts applied despite a write in between; a stray verdict reported; no double apply"
 
 
+def test_weave_then_the_poem_is_a_lens_in_every_step():
+    h = tempfile.mkdtemp()
+    for i, t in enumerate(["the staging database password rotates monthly", "the cafeteria closes early on fridays",
+                           "deploys freeze on tuesdays", "the printer on floor 3 jams on duplex",
+                           "audit logs are kept for 90 days", "tokens expire after one hour"]):
+        run(["remember", t], h)
+    assert "skip" in json.loads(run(["poem-weave"], h))          # no figures yet
+    for _ in range(2):
+        pp = json.loads(run(["poem-pairs"], h))["pairs"]
+        run(["poem-apply"], h, stdin=json.dumps([{"A": x["A"]["id"], "B": x["B"]["id"],
+                                                  "figures": [{"text": "a plain one", "p": 0.4}, {"text": f"zeta-quill {x['A']['id']}", "p": 0.01}],
+                                                  "aliases": {}, "verse": "v"} for x in pp]))
+    shown = json.loads(run(["poem-weave"], h))
+    ids = [f["id"] for f in shown["figures"]]
+    assert len(ids) >= 3 and shown["figures"][0]["from"] and "poem" not in json.loads(run(["dream-pairs"], h))
+    out = run(["weave-apply"], h, stdin=json.dumps({"title": "Quills", "text": "a\nb\nc\nd", "from": ids}))
+    assert out.startswith(f"wove {len(ids)} of {len(ids)}"), out
+    for step in ("dream-pairs", "poem-pairs", "excursion-seeds"):
+        lens = json.loads(run([step], h)).get("poem")
+        assert lens and lens["title"] == "Quills" and "not evidence" in lens["read_as"], step
+    off = {"ENSEMBLE_NIGHT_POEMS": "0"}
+    assert "poem" not in json.loads(run(["dream-pairs"], h, env_extra=off)) and "skip" in json.loads(run(["poem-weave"], h, env_extra=off))
+    assert len(json.loads(run(["excursion-seeds"], h, env_extra={"ENSEMBLE_EXCURSIONS": "3"}))["seeds"]) == 3
+    return "poem-weave -> weave-apply; the woven poem then rides along with dreams, poems and excursions (off with ENSEMBLE_NIGHT_POEMS=0)"
+
+
 def test_the_hook_never_blocks_a_session():
     out = run(["--listen"], "/proc/forbidden/ensemble")
     assert out.startswith("Ensemble unavailable")

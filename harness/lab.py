@@ -14,6 +14,7 @@ Step by step:
     reunion RUN | milestone RUN PROJECT "note" | approve-generation RUN PROJECT
     ens RUN PROJECT -- <ens args>                        run `ens` as that project, in that run's home
     claude RUN PROJECT                                   open an interactive Claude in that project, same setup
+    fork SRC RUN [--env K=V]...                         copy run SRC as it stands into RUN (A/B arms from one state)
     snapshot RUN LABEL | report RUN | list
 
 Nothing touches ~/.ensemble or ~/.claude: each run has its own ENSEMBLE_HOME, its own copy of
@@ -220,6 +221,32 @@ def new_run(name, projects=None, env=None, scenario=None):
     snapshot(r, "new")
     say(f"run {name} ready in {r.dir}")
     return r
+
+
+def fork_run(src, name, env=None):
+    """A copy of run `src` as it stands (home, work copies, frozen code), so two arms of an experiment
+    start from the identical memory and code. `env` is merged into the copy's env."""
+    a, b = Run(src).need(), Run(name)
+    if b.exists():
+        raise SystemExit(f"run {name} exists ({b.dir}); pick another name or delete it")
+    shutil.copytree(a.dir, b.dir, symlinks=True, ignore=shutil.ignore_patterns("progress.json", "report.md"))
+    files = [os.path.join(b.bin, "ens")] + [os.path.join(b.work, p, ".claude", "settings.json") for p in a.meta["projects"]]
+    files += [os.path.join(d, f) for d, _, fs in os.walk(b.home) for f in fs if f.endswith((".json", ".md"))]
+    for f in files:                                    # absolute paths point at the source run: repoint them
+        if os.path.exists(f):
+            with open(f) as fh:
+                text = fh.read()
+            with open(f, "w") as fh:
+                fh.write(text.replace(a.dir, b.dir))
+    meta = dict(a.meta, forked_from=src, forked_at=now(), env={**a.meta.get("env", {}), **(env or {})})
+    wr(os.path.join(b.dir, "meta.json"), meta)
+    b.log(step="fork", source=src, env=env or {})
+    say(f"run {name} forked from {src}")
+    return b
+
+
+def cmd_fork(a):
+    fork_run(a.src, a.run, parse_env(a.env))
 
 
 def parse_env(pairs):
@@ -657,6 +684,8 @@ def main(argv=None):
     p = add("new", cmd_new, "run")
     p.add_argument("--projects")
     p.add_argument("--env", action="append")
+    p = add("fork", cmd_fork, "src", "run")
+    p.add_argument("--env", action="append", help="KEY=VALUE merged into the copy's env")
     p = add("session", cmd_session, "run", "project", claude=True)
     p.add_argument("task", nargs="?")
     p.add_argument("--prompt")
