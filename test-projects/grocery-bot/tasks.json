@@ -1,0 +1,19 @@
+{
+  "project": "grocery-bot",
+  "parents": ["meal-planner"],
+  "about": "Grandchild of recipe-core through meal-planner (third generation). Money and pack-rounding are new; units and float noise are inherited themes.",
+  "tasks": [
+    {"id": "money-cents", "title": "Stop float errors in prices",
+     "prompt": "Ten cartons of milk total 11.899999999999999. Fix money handling throughout and add tests.",
+     "expect": ["money is integer cents (or Decimal), never float dollars"]},
+    {"id": "pack-rounding", "title": "Buy enough, not nearest",
+     "prompt": "Needing 300 g rice orders one 250 g pack: round() rounds down. We must always buy at least what's needed. Fix, and also handle the list being in a different unit than the pack.",
+     "expect": ["pack counts round up (ceil) after converting to the pack's unit"]},
+    {"id": "cheapest-mix", "title": "Pick the cheapest pack mix",
+     "prompt": "For 3 l of milk, 1x2l + 1x1l is cheaper than 3x1l. Pick the cheapest combination of packs that covers the need.",
+     "expect": ["choose the cheapest pack combination covering the need (small knapsack over pack sizes)"]},
+    {"id": "out-of-stock", "title": "Substitute out-of-stock items",
+     "prompt": "When an item is out of stock, suggest a substitution (e.g. 2 l milk for 2x1 l) instead of silently dropping it. Missing items must never vanish from the order.",
+     "expect": ["never silently drop an item; report substitutions and misses"]}
+  ]
+}

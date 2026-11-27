@@ -1,0 +1,24 @@
+{
+  "project": "recipe-core",
+  "about": "Founder of the kitchen family. Seeds the float-display, unit-density and cup-size themes that its descendants meet again.",
+  "tasks": [
+    {"id": "float-display", "title": "Clean up scaled quantities",
+     "prompt": "Scaling '1/10 cup vanilla' by 3 prints 0.30000000000000004. Make scaled quantities display cleanly (cooks expect things like '1/3' or '0.3', never float noise). Pick an approach, implement it, add a test.",
+     "expect": ["quantities are stored as fractions.Fraction (or rounded only at display) to avoid float noise", "format_qty shows common cooking fractions"]},
+    {"id": "unicode-fractions", "title": "Parse unicode fractions",
+     "prompt": "Recipes pasted from the web use '½ cup sugar' and '1½ cups milk'. Make parse_line handle unicode vulgar fractions. Add tests.",
+     "expect": ["parse_line maps unicode vulgar fractions like ½ ¼ ⅓ to numbers, including attached forms like 1½"]},
+    {"id": "plural-glass", "title": "Fix unit plural stripping",
+     "prompt": "A user reports '2 glasses wine' and 'a pinch of salt' parse oddly. Look at how units are normalized and fix the plural handling without breaking 'cups'. Add tests.",
+     "expect": ["normalize() must not blindly strip a trailing s; use an explicit plural map"]},
+    {"id": "flour-grams", "title": "Convert cups of flour to grams",
+     "prompt": "Bakers want 'cups of flour' converted to grams. convert() refuses volume to mass. Add support for the common baking ingredients and explain the limits in the README.",
+     "expect": ["volume to mass needs a per-ingredient density table (flour about 120 g per cup); never convert across dimensions without one"]},
+    {"id": "floats-again", "title": "Decide on float quantities for speed",
+     "prompt": "A contributor wants to switch quantities back to plain floats 'for speed'. Should we? Check what we decided before and why, then answer in the README's design notes.",
+     "expect": ["keep exact quantities; the float-noise decision still holds"]},
+    {"id": "us-cup-240", "title": "Adopt the 240 ml cup",
+     "prompt": "Our baker says nutrition labels use a 240 ml US cup, not 236.6 ml. Switch the library's cup to 240 ml and note the change.",
+     "expect": ["the cup is now 240 ml (US nutrition labeling), replacing 236.6 ml"]}
+  ]
+}

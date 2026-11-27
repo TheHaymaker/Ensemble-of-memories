@@ -1,0 +1,12 @@
+{
+  "about": "Does Claude reach for Ensemble on its own? Same as smoke but without the system-prompt nudge, on three tasks.",
+  "projects": ["recipe-core"],
+  "nudge": false,
+  "env": {"ENSEMBLE_SLEEP_AT": "3"},
+  "steps": [
+    {"do": "session", "project": "recipe-core", "task": "float-display"},
+    {"do": "session", "project": "recipe-core", "task": "unicode-fractions"},
+    {"do": "session", "project": "recipe-core", "task": "floats-again"},
+    {"do": "night", "project": "recipe-core"}
+  ]
+}

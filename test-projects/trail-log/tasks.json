@@ -1,0 +1,19 @@
+{
+  "project": "trail-log",
+  "parents": [],
+  "about": "Unrelated founder. Shares the float-display and unit lessons with the kitchen family, so a reunion may propose kinship.",
+  "tasks": [
+    {"id": "pace-format", "title": "Fix pace showing 7:5",
+     "prompt": "Pace prints '7:5' instead of '7:05', and sometimes '6:60'. Fix pace formatting. Add tests.",
+     "expect": ["format pace from whole rounded seconds with divmod and zero padding"]},
+    {"id": "miles-display", "title": "Clean up mileage display",
+     "prompt": "The summary shows 3.1068550000000003 miles. Make distances display cleanly in both km and miles.",
+     "expect": ["round only at display; keep exact values internally to avoid float noise"]},
+    {"id": "gps-noise", "title": "Stop GPS jitter inflating climbs",
+     "prompt": "A flat 5 km walk reports 180 m of elevation gain because of GPS jitter. Fix elevation gain and document the choice.",
+     "expect": ["ignore elevation changes under a threshold (hysteresis about 3-5 m) when summing gain"]},
+    {"id": "units-pref", "title": "Remember unit preference",
+     "prompt": "Users pick km or miles once and every report should follow it. Add the preference and keep conversions in one place.",
+     "expect": ["one conversion module; stored values in metric, converted at display"]}
+  ]
+}
