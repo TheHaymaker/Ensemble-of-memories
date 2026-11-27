@@ -3,17 +3,85 @@
   "parents": [],
   "about": "Unrelated founder. Shares the float-display and unit lessons with the kitchen family, so a reunion may propose kinship.",
   "tasks": [
-    {"id": "pace-format", "title": "Fix pace showing 7:5",
-     "prompt": "Pace prints '7:5' instead of '7:05', and sometimes '6:60'. Fix pace formatting. Add tests.",
-     "expect": ["format pace from whole rounded seconds with divmod and zero padding"]},
-    {"id": "miles-display", "title": "Clean up mileage display",
-     "prompt": "The summary shows 3.1068550000000003 miles. Make distances display cleanly in both km and miles.",
-     "expect": ["round only at display; keep exact values internally to avoid float noise"]},
-    {"id": "gps-noise", "title": "Stop GPS jitter inflating climbs",
-     "prompt": "A flat 5 km walk reports 180 m of elevation gain because of GPS jitter. Fix elevation gain and document the choice.",
-     "expect": ["ignore elevation changes under a threshold (hysteresis about 3-5 m) when summing gain"]},
-    {"id": "units-pref", "title": "Remember unit preference",
-     "prompt": "Users pick km or miles once and every report should follow it. Add the preference and keep conversions in one place.",
-     "expect": ["one conversion module; stored values in metric, converted at display"]}
+    {
+      "id": "pace-format",
+      "title": "Fix pace showing 7:5",
+      "prompt": "Pace prints '7:5' instead of '7:05', and sometimes '6:60'. Fix pace formatting. Add tests.",
+      "expect": [
+        "format pace from whole rounded seconds with divmod and zero padding"
+      ]
+    },
+    {
+      "id": "miles-display",
+      "title": "Clean up mileage display",
+      "prompt": "The summary shows 3.1068550000000003 miles. Make distances display cleanly in both km and miles.",
+      "expect": [
+        "round only at display; keep exact values internally to avoid float noise"
+      ]
+    },
+    {
+      "id": "gps-noise",
+      "title": "Stop GPS jitter inflating climbs",
+      "prompt": "A flat 5 km walk reports 180 m of elevation gain because of GPS jitter. Fix elevation gain and document the choice.",
+      "expect": [
+        "ignore elevation changes under a threshold (hysteresis about 3-5 m) when summing gain"
+      ]
+    },
+    {
+      "id": "units-pref",
+      "title": "Remember unit preference",
+      "prompt": "Users pick km or miles once and every report should follow it. Add the preference and keep conversions in one place.",
+      "expect": [
+        "one conversion module; stored values in metric, converted at display"
+      ]
+    },
+    {
+      "id": "weekly-summary",
+      "title": "Add a weekly summary",
+      "prompt": "Add a weekly summary that totals distance, climb and moving time across several hikes and prints one line per week. It must look right for both km and miles users.",
+      "expect": [
+        "weekly totals add exact metric values and format once at display"
+      ]
+    },
+    {
+      "id": "split-times",
+      "title": "Show split times per km",
+      "prompt": "Show a split time for every whole kilometre (or mile, per the user's preference) of a hike, formatted like the overall pace.",
+      "expect": [
+        "splits reuse the shared pace formatter instead of formatting again"
+      ]
+    },
+    {
+      "id": "elevation-feet",
+      "title": "Show climb in feet",
+      "prompt": "Users who picked miles want elevation gain in feet. A report showed 1640.4199475065616 ft. Fix it.",
+      "expect": [
+        "feet are converted from stored metres at display only"
+      ]
+    },
+    {
+      "id": "csv-export",
+      "title": "Export hikes to CSV",
+      "prompt": "Add a CSV export of hikes (date, distance, climb, time, pace) that a spreadsheet can re-import without losing precision, plus a human-readable column set for the user's units.",
+      "expect": [
+        "exports keep raw metric values; only human-readable columns are rounded and converted"
+      ]
+    },
+    {
+      "id": "avg-speed",
+      "title": "Add average speed",
+      "prompt": "Add average moving speed (km/h or mph per the preference). A tester saw 4.999999999 km/h. Make it display cleanly and keep it consistent with pace.",
+      "expect": [
+        "speed is derived from exact metric values and rounded only at display"
+      ]
+    },
+    {
+      "id": "year-review",
+      "title": "Year in review report",
+      "prompt": "Build a year-in-review report: total distance, total climb (with the GPS jitter handling), fastest pace and longest hike, in the user's units.",
+      "expect": [
+        "year report reuses the shared conversion, pace and jitter-filtered climb code"
+      ]
+    }
   ]
 }

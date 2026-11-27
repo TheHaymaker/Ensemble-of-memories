@@ -1,0 +1,19 @@
+{
+  "about": "Can lessons form in real runs? One project, ten sessions that keep returning to the same few decisions (round only at display, metric inside, one pace formatter), with a night after every two or three sessions. A lesson needs a waking memory used 4+ times with spaced uses, judged in a dream, and consolidated across 2 nights. About 10 sessions and 5 nights with Claude.",
+  "env": {"ENSEMBLE_SLEEP_AT": "6"},
+  "projects": ["trail-log"],
+  "nudge": true,
+  "beats_per_session": 0,
+  "steps": [
+    {"do": "sessions", "project": "trail-log", "tasks": ["pace-format", "miles-display"]},
+    {"do": "night", "project": "trail-log"},
+    {"do": "sessions", "project": "trail-log", "tasks": ["units-pref", "weekly-summary"]},
+    {"do": "night", "project": "trail-log"},
+    {"do": "sessions", "project": "trail-log", "tasks": ["split-times", "elevation-feet"]},
+    {"do": "night", "project": "trail-log"},
+    {"do": "sessions", "project": "trail-log", "tasks": ["gps-noise", "csv-export"]},
+    {"do": "night", "project": "trail-log"},
+    {"do": "sessions", "project": "trail-log", "tasks": ["avg-speed", "year-review"]},
+    {"do": "night", "project": "trail-log"}
+  ]
+}
