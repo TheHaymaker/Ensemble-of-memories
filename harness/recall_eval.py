@@ -2,6 +2,7 @@
 """How well does recall find what real sessions were looking for?
 
     .lab/venv/bin/python harness/recall_eval.py [harness/data/recall-saga1.json]
+    ENSEMBLE_EMBEDDER=hybrid .lab/venv/bin/python harness/recall_eval.py      (needs model2vec)
 
 Each query is a cue Claude actually sent to `ens recall` in a run, with the memories that existed then
 and, labelled by hand, the ones that answer it. Rebuilds each store with the current Ensemble code and
@@ -17,12 +18,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(HERE), "packages", "ensemble"))
 from memory import MemoryStore  # noqa: E402
 
 
-def evaluate(path):
+def make_embedder():
+    kind = os.environ.get("ENSEMBLE_EMBEDDER", "keywords")
+    if kind == "keywords":
+        return None
+    import embeddings as E
+    return {"model2vec": E.Model2VecEmbedder, "hybrid": E.HybridEmbedder}[kind]()
+
+
+def evaluate(path, emb=None):
     qs = json.load(open(path))["queries"]
     found = first = wrong = answerable = 0
     rows = []
     for q in qs:
-        s = MemoryStore(tempfile.mkdtemp())
+        s = MemoryStore(tempfile.mkdtemp(), emb)
         ids = {}
         for old, m in q["memories"].items():
             ids[s.remember(m["text"], 0.5, m.get("src") or "")] = old
@@ -39,7 +48,8 @@ def evaluate(path):
 
 
 if __name__ == "__main__":
-    r = evaluate(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data", "recall-saga1.json"))
+    r = evaluate(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data", "recall-saga1.json"),
+                 make_embedder())
     for cue, rel, hits in r["rows"]:
         mark = "ok " if (set(rel) & {h for h, _ in hits}) else ("-- " if rel else "   ")
         print(f"{mark}{cue[:60]:60} want {rel or '-'} got {hits}")

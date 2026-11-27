@@ -305,18 +305,28 @@ class MemoryStore:
             sims = (V.astype(np.float32) @ q) if (q is not None and V.size) else None    # aliases count too
             if q is not None and sims is None:          # embedder store with no memories yet
                 return []
-            hits = []
+            hybrid = getattr(self.emb, "hybrid", False)
+            recall_min, cue_min, revive = ((RECALL_MIN, CUE_MIN, REVIVE) if hybrid
+                                           else (self.recall_min, self.cue_min, self.revive))
+            hits, near = [], None
             for mid, m in idx["m"].items():
-                sim = (max([float(sims[m["vi"]])] + [float(sims[r]) for r in m.get("avi", [])])
-                       if sims is not None else cue_overlap(ckw, m["kw"]))
+                vsim = (max([float(sims[m["vi"]])] + [float(sims[r]) for r in m.get("avi", [])])
+                        if sims is not None else None)
+                sim = cue_overlap(ckw, m["kw"]) if (vsim is None or hybrid) else vsim
                 if m["dormant"]:
-                    if sim * cue_strength >= self.revive:
+                    if sim * cue_strength >= revive:
                         self._invoke(m, now, 0.0, revived=True)
                         hits.append((sim, mid, "revived"))
-                elif sim >= self.recall_min:
+                elif sim >= recall_min:
                     hits.append((sim, mid, "recalled"))
-                elif sim >= self.cue_min:
+                elif sim >= cue_min:
                     hits.append((sim, mid, "weak"))
+                elif hybrid and vsim >= self.emb.fallback_min:
+                    rank = vsim * (1.0 if m.get("origin", "waking") in ("waking", "confirmed") else IDEA_RANK)
+                    if near is None or rank > near[0]:
+                        near = (rank, (vsim, mid, "weak"))
+            if not hits and near:            # hybrid: no keyword matched, show the model's best guess
+                hits = [near[1]]
             # What was learned awake outranks a dream's or a poem's idea about it at a similar match.
             hits.sort(reverse=True, key=lambda h: h[0] * (1.0 if idx["m"][h[1]].get("origin", "waking")
                                                           in ("waking", "confirmed") else IDEA_RANK))

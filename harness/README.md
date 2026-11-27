@@ -6,6 +6,7 @@ what memory looked like after every step. Stdlib Python; Ensemble itself runs in
 
 ```bash
 python3 harness/lab.py setup                     # once (add --full for MCP and embedding extras)
+# Recall with embeddings: install model2vec into .lab/venv, then add --env ENSEMBLE_EMBEDDER=hybrid to play
 python3 harness/lab.py play saga1 harness/scenarios/family-saga.json
 python3 harness/lab.py report saga1              # rewritten after every play anyway
 ```
