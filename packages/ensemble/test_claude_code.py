@@ -50,6 +50,34 @@ def test_a_night_through_the_cli():
     return "dream-pairs -> Claude's verdicts -> dream-apply; poem and excursion steps the same way"
 
 
+def test_answers_from_a_file_and_help():
+    """Claude Code refuses quoted braces on a command line (heredocs included), so the night skill
+    answers through a file. In a 30-session run every night hit that refusal before this."""
+    h, cwd = tempfile.mkdtemp(), tempfile.mkdtemp()
+    run(["remember", "the staging database password rotates monthly"], h, cwd=cwd)
+    run(["remember", "the staging db password now rotates weekly instead"], h, cwd=cwd)
+    shown = json.loads(run(["dream-pairs"], h, cwd=cwd))
+    assert "--file .ensemble-answer.json" in shown["answer_with"]
+    ans = os.path.join(cwd, ".ensemble-answer.json")
+    with open(ans, "w") as f:
+        json.dump([{"a": "m00001", "b": "m00002", "op": "substitute", "score": 0.9, "keep": "m00002"}], f)
+    report = run(["dream-apply", "--file", ".ensemble-answer.json"], h, cwd=cwd, stdin="")
+    assert "1 substitute" in report and not os.path.exists(ans), report
+    keep = os.path.join(cwd, "verdicts.json")                    # a file not named .ensemble-* is left alone
+    run(["dream-pairs"], h, cwd=cwd)
+    with open(keep, "w") as f:
+        f.write("[]")
+    run(["dream-apply", "--file", "verdicts.json"], h, cwd=cwd, stdin="")
+    assert os.path.exists(keep)
+    helped = run(["dream-apply", "--help"], h, cwd=cwd, stdin="")
+    assert helped.startswith("ens dream-apply:") and "--file" in helped and "error" not in helped
+    assert run(["remember", "--help"], h, cwd=cwd, stdin="").startswith("ens remember:")
+    run(["dream-pairs"], h, cwd=cwd)
+    empty = run(["dream-apply"], h, cwd=cwd, stdin="")
+    assert empty.startswith("error: no answer given") and "--file" in empty, empty
+    return "dream-apply --file applies and tidies .ensemble-answer.json; --help explains instead of crashing"
+
+
 def test_every_verdict_given_is_applied():
     """dream-apply judges exactly the pairs dream-pairs showed, even though applying verdicts
     (and memories written in between) would change what fresh sampling picks."""

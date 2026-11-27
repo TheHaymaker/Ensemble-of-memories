@@ -270,7 +270,7 @@ def dream_pairs(agent: str = "conductor", cycles: int = 4, pairs_per_cycle: int 
             return None
         plan = _dry_run(agent, lambda s: s.sleep(record, cycles, pairs_per_cycle, rng=random.Random(seed)))["plan"]
         _pending(agent, "dream", {"cycles": cycles, "ppc": pairs_per_cycle, "plan": plan})
-        return json.dumps({"pairs": seen, "answer_with": "ens dream-apply (JSON on stdin) or the dream_apply tool: a JSON list of "
+        return json.dumps({"pairs": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens dream-apply --file {ANSWER_FILE} (or the dream_apply tool). Each item: "
                            "{a, b, op: none|reinforce|add|qualify|substitute|subtract|tension, score 0-1, "
                            "keep: id (substitute/subtract), insight: one sentence or null}"}, separators=(",", ":"))
     return _safe(go)
@@ -317,7 +317,7 @@ def poem_pairs(agent: str = "conductor", pairs: int = 3) -> str:
             return None
         plan = _dry_run(agent, lambda s: s.compose(record, pairs, rng=random.Random(seed))).get("plan", [])
         _pending(agent, "poem", {"pairs": pairs, "plan": plan})
-        return json.dumps({"pairs": seen, "answer_with": "ens poem-apply (JSON on stdin) or poem_apply: a JSON list, one per pair, of "
+        return json.dumps({"pairs": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens poem-apply --file {ANSWER_FILE} (or poem_apply), one item per pair: "
                            "{A: id, B: id, figures: [{text, p}] x8, aliases: {A: [{text, p}] x8, B: [...]}, "
                            "glosses: {A, B}, probes: {A, B}, verse}. p = your honest probability of writing "
                            "it; sample from the tails (p < 0.10). The likelier half is always refused."}, separators=(",", ":"))
@@ -357,7 +357,7 @@ def excursion_seeds(agent: str = "conductor", n: int = 1) -> str:
             return None
         plan = _dry_run(agent, lambda s: s.wander(record, n, rng=random.Random(seed)))["plan"]
         _pending(agent, "excursion", {"n": n, "plan": plan})
-        return json.dumps({"seeds": seen, "answer_with": "ens excursion-apply (JSON on stdin) or excursion_apply: a JSON list of {seed, form: "
+        return json.dumps({"seeds": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens excursion-apply --file {ANSWER_FILE} (or excursion_apply). Each item: {{seed, form: "
                            "build-out|experiment|thought-exercise|hypothesis, title, outcome, surprise, verdict, "
                            "prediction (hypotheses), spawn: [<=2 ideas], ran: what happened if you actually ran "
                            "something}"}, separators=(",", ":"))
@@ -476,12 +476,13 @@ USAGE = """ens: shared memory and coordination for this project (Ensemble)
   ens remember "text" [--importance 0.7]    ens recall "cue" [--strength 0.9]     ens use-memory m00012
   ens write-note "text"   ens read-part builder   ens vote q yes 0.8   ens lessons
   ens open-question q --text "what is being decided"   ens close-question q   ens next-beat
-  ens dream-pairs | ens dream-apply < verdicts.json      (night: Claude judges)
-  ens poem-pairs  | ens poem-apply < poems.json          ens excursion-seeds | ens excursion-apply < notes.json
+  ens dream-pairs | ens dream-apply --file .ensemble-answer.json      (night: Claude judges)
+  ens poem-pairs  | ens poem-apply --file ...   ens excursion-seeds | ens excursion-apply --file ...
   ens family-tree   ens family-reunion   ens approve-generation   ens decline-generation
   ens declare-milestone "v2 rewrite"   ens approve-kin other-project   ens adopt-saying s0004   ens whoami
   ens mcp                                   run as an MCP server instead
-Every command takes --agent NAME (default conductor). JSON for *-apply comes on stdin or as one argument."""
+Every command takes --agent NAME (default conductor) and --help. JSON for *-apply: --file PATH (a file
+named .ensemble-* is deleted once applied), stdin, or one argument."""
 
 
 def cli(argv):
@@ -501,27 +502,57 @@ def cli(argv):
     if fn is None:
         print(f"unknown command {argv[0]}\n\n{USAGE}"); return 2
     params = inspect.signature(fn).parameters
-    kwargs, pos, i = {}, [], 1
+    json_param = next((p for p in ("verdicts", "poems", "notes") if p in params), None)
+    if any(a in ("-h", "--help") for a in argv[1:]):
+        print(command_help(argv[0], fn, json_param)); return 0
+    kwargs, pos, i, answer_file = {}, [], 1, None
     while i < len(argv):
         a = argv[i]
-        if a.startswith("--") and a[2:].replace("-", "_") in params:
+        if a == "--file" and json_param and i + 1 < len(argv):
+            answer_file = argv[i + 1]; i += 2
+        elif a.startswith("--") and a[2:].replace("-", "_") in params and i + 1 < len(argv):
             kwargs[a[2:].replace("-", "_")] = argv[i + 1]; i += 2
         else:
             pos.append(a); i += 1
     free = [p for p in params if p not in kwargs]
     for p, v in zip(free, pos):
         kwargs[p] = v
-    json_param = next((p for p in ("verdicts", "poems", "notes") if p in params), None)
     if json_param and json_param not in kwargs:
-        kwargs[json_param] = sys.stdin.read()
+        if answer_file:
+            with open(answer_file) as f:
+                kwargs[json_param] = f.read()
+        elif not sys.stdin.isatty():
+            kwargs[json_param] = sys.stdin.read()
+        if not (kwargs.get(json_param) or "").strip():
+            print(f"error: no answer given. Write the JSON to a file and run: ens {argv[0]} --file {ANSWER_FILE}")
+            return 2
     for p, v in list(kwargs.items()):                          # cast to the annotated type
         ann = params[p].annotation
         if ann in (int, float):
             kwargs[p] = ann(v)
         elif "list" in str(ann) and isinstance(v, str):
             kwargs[p] = [x.strip() for x in v.split(",") if x.strip()]
-    print(fn(**kwargs))
+    out = fn(**kwargs)
+    print(out)
+    if answer_file and not out.startswith("error:") and os.path.basename(answer_file).startswith(".ensemble-"):
+        os.remove(answer_file)                                 # a scratch answer, applied: tidy it away
     return 0
+
+
+ANSWER_FILE = ".ensemble-answer.json"
+
+
+def command_help(name, fn, json_param):
+    import inspect
+    doc = inspect.getdoc(fn) or ""
+    opts = [f"--{p.replace('_', '-')}" + (f" (default {v.default})" if v.default is not inspect.Parameter.empty else "")
+            for p, v in inspect.signature(fn).parameters.items() if p != json_param]
+    out = f"ens {name}: {doc}\n\noptions: {', '.join(opts) or 'none'}"
+    if json_param:
+        out += (f"\n\nThe answer is JSON. Write it to a file (e.g. {ANSWER_FILE} with your Write tool) and run "
+                f"`ens {name} --file {ANSWER_FILE}`; a file named .ensemble-* is deleted once applied. "
+                f"Piping it on stdin also works.")
+    return out
 
 
 if __name__ == "__main__":
