@@ -53,7 +53,9 @@ SLEEP_PRESSURE = 30                # new waking memories that make sleep due
 DREAM_SOURCES = ("dream", "qualify", "tension", "poem", "probe", "excursion", "prediction")
 IMAGINED = ("poem", "probe", "excursion", "prediction")   # language and play: never referents, never facts
 PRECISION_MARGIN = 0.02            # an alias must be this much closer to its memory than to any other
-LESSON_USES, LESSON_NIGHTS, LESSON_CAP = 8, 3, 40   # what it takes to harden into a lesson; most lessons kept
+LESSON_USES, LESSON_NIGHTS, LESSON_CAP = 4, 2, 40   # what it takes to harden into a lesson; most lessons kept
+# (8 uses over 3 nights in long-term was reachable in 600-beat simulations, never in a project with a
+# few sessions a week: in a 30-session run with real Claude sessions no memory got past 2 uses.)
 CONFIRM_USES = 2                   # waking uses that confirm a dream-made idea as a real memory
 BACKSTOP = 4                       # dormant and untouched for BACKSTOP x grace: archived even without exposures
 SCREEN = 0.8                       # dormant memory with no partner above SCREEN x recall_min: fruitless, no judge call
@@ -422,11 +424,11 @@ class MemoryStore:
 
     # ------------------------------------------------------------- lessons
     def _harden(self, idx):
-        """End of each night: long-term memories that earned it become lessons."""
+        """End of each night: consolidated memories (intermediate or long) that earned it become lessons."""
         now, protected = idx["beat"], self._protected(idx)
         new = []
         for mid, m in idx["m"].items():
-            if m.get("lesson") or m["dormant"] or m["c"] != 2:
+            if m.get("lesson") or m["dormant"] or m["c"] < 1:     # intermediate (2 spaced uses) or long
                 continue
             m["nights_long"] = m.get("nights_long", 0) + 1
             if (m.get("origin", "waking") in ("waking", "confirmed") and m["uses"] >= self.lesson_uses

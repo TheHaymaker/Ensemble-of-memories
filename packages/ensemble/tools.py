@@ -94,13 +94,18 @@ class Player:
                                  f"{'; '.join(sug['reasons'])}). Awaiting your approval.")
             if self.family is not None:
                 fam = self.family._load()
-                for a in self.family.advice(self.member, context):
-                    origin = self.family.describe_origin(fam, self.member, a["item"])
-                    lines.append(f"family {a['kind']} {a['id']} ({origin}, advice only): {a['item']['text']}")
+                # Advice matches the open questions; with none open (the usual case), show what this
+                # project was handed instead, or a child never hears its parents at all.
+                handed = self.family.advice(self.member, context) or self.family.inheritance(self.member)
+                lines += self._family_lines(fam, handed)
             mem = self.memory.summary().splitlines()
             lines.append("memory: " + mem[0].split(" | ", 1)[1].split(" | ")[0])
             lines += [f"  {l}" for l in mem[1:1 + self.MEMORY_LINES]]
         return "\n".join(lines)
+
+    def _family_lines(self, fam, items):
+        return [f"family {a['kind']} {a['id']} ({self.family.describe_origin(fam, self.member, a['item'])}, "
+                f"advice only): {a['item']['text']}" for a in items]
 
     @_safe
     def read_part(self, agent: str) -> str:
@@ -204,11 +209,12 @@ class Player:
         """Search your memory by meaning. strength (0 to 1) is how strongly the situation
         calls for it: only a strong, closely matching cue wakes a dormant memory."""
         hits = self.memory.recall(cue, strength)
-        if not hits:
-            return "nothing matched"
-        return "\n".join(f"{h['id']} [{h['how']}, {h['tier']}, sim {h['similarity']}"
-                         + (f", OUTDATED: see {h['superseded_by']}" if h.get("superseded_by") else "")
-                         + f"] {self.memory.describe(h['id'])}" for h in hits)
+        lines = [f"{h['id']} [{h['how']}, {h['tier']}, sim {h['similarity']}"
+                 + (f", OUTDATED: see {h['superseded_by']}" if h.get("superseded_by") else "")
+                 + f"] {self.memory.describe(h['id'])}" for h in hits]
+        if self.family is not None:                 # relatives may have met this before
+            lines += self._family_lines(self.family._load(), self.family.advice(self.member, cue, k=3))
+        return "\n".join(lines) or "nothing matched"
 
     @_safe
     def use_memory(self, memory_id: str) -> str:
@@ -224,8 +230,12 @@ class Player:
 
     @_safe
     def adopt_saying(self, saying_id: str) -> str:
-        """Take a family saying into your own memory. It starts unproven: use it to confirm it."""
-        s = self.family._load()["sayings"][saying_id]
+        """Take a family saying or heirloom (s0004, h0005) into your own memory. It starts unproven:
+        use it to confirm it."""
+        fam = self.family._load()
+        s = fam["sayings"].get(saying_id) or fam["heirlooms"].get(saying_id)
+        if s is None:
+            return f"no family saying or heirloom {saying_id}"
         mid = self.memory.remember(s["text"], 0.5, source=f"family:{saying_id}")
         return f"adopted as {mid} (inherited, unconfirmed)"
 

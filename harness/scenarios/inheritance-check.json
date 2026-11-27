@@ -1,0 +1,12 @@
+{
+  "about": "Does a child or a new generation hear and use what its parent knew? recipe-core settles the float question; meal-planner meets it again; recipe-core comes of age and is asked again. About 7 sessions and a night.",
+  "projects": ["recipe-core", "meal-planner"],
+  "env": {"ENSEMBLE_SLEEP_AT": "4"},
+  "steps": [
+    {"do": "sessions", "project": "recipe-core", "tasks": ["float-display", "unicode-fractions", "flour-grams", "floats-again"]},
+    {"do": "night", "project": "recipe-core"},
+    {"do": "sessions", "project": "meal-planner", "tasks": ["float-display", "combine-units"]},
+    {"do": "milestone", "project": "recipe-core", "note": "v2"},
+    {"do": "session", "project": "recipe-core", "task": "floats-again"}
+  ]
+}
