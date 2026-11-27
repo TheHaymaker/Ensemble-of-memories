@@ -124,12 +124,31 @@ def listen_text(agent="conductor"):
 
 # ------------------------------------------------- the two-step night protocol
 def _pending(agent, kind, data=None):
+    """Save step 1's plan for step 2 (data given), or load it. Step 2 needs step 1's exact plan."""
     p = os.path.join(paths(member())[1], agent, f"pending_{kind}.json")
     if data is None:
+        step1 = {"dream": "dream-pairs", "poem": "poem-pairs", "excursion": "excursion-seeds"}[kind]
+        if not os.path.exists(p):
+            raise RuntimeError(f"nothing pending: run `ens {step1}` first")
         with open(p) as f:
-            return json.load(f)
+            pend = json.load(f)
+        if "plan" not in pend:
+            raise RuntimeError(f"this pending step is from an older ens: run `ens {step1}` again")
+        return pend
     with open(p, "w") as f:
         json.dump(data, f)
+
+
+def _done_pending(agent, kind):
+    """Step 2 applied: drop the plan so the same answers can't be applied twice."""
+    try:
+        os.remove(os.path.join(paths(member())[1], agent, f"pending_{kind}.json"))
+    except FileNotFoundError:
+        pass
+
+
+def _unmatched(note, keys):
+    return f"; {len(keys)} {note}: {', '.join(keys[:5])}{' ...' if len(keys) > 5 else ''}" if keys else ""
 
 
 def _dry_run(agent, run):
@@ -249,8 +268,8 @@ def dream_pairs(agent: str = "conductor", cycles: int = 4, pairs_per_cycle: int 
         def record(a, b, sim):
             seen.append({"a": _brief(a), "b": _brief(b), "similarity": round(sim, 2)})
             return None
-        _dry_run(agent, lambda s: s.sleep(record, cycles, pairs_per_cycle, rng=random.Random(seed)))
-        _pending(agent, "dream", {"seed": seed, "cycles": cycles, "ppc": pairs_per_cycle})
+        plan = _dry_run(agent, lambda s: s.sleep(record, cycles, pairs_per_cycle, rng=random.Random(seed)))["plan"]
+        _pending(agent, "dream", {"cycles": cycles, "ppc": pairs_per_cycle, "plan": plan})
         return json.dumps({"pairs": seen, "answer_with": "ens dream-apply (JSON on stdin) or the dream_apply tool: a JSON list of "
                            "{a, b, op: none|reinforce|add|qualify|substitute|subtract|tension, score 0-1, "
                            "keep: id (substitute/subtract), insight: one sentence or null}"}, separators=(",", ":"))
@@ -270,10 +289,19 @@ def dream_apply(verdicts: str, agent: str = "conductor") -> str:
             if v.get("keep"):
                 v["drop"] = v["b"] if v["keep"] == v["a"] else v["a"]
             table[tuple(sorted((v["a"], v["b"])))] = v
-        judge = lambda a, b, sim: table.get(tuple(sorted((a["id"], b["id"]))))
+        asked = set()
+        def judge(a, b, sim):
+            key = tuple(sorted((a["id"], b["id"])))
+            asked.add(key)
+            return table.get(key)
         p = player(agent)
-        return p.memory.sleep(judge, pend["cycles"], pend["ppc"], rng=random.Random(pend["seed"]),
-                              min_score=p.min_score)["report"]
+        report = p.memory.sleep(judge, pend["cycles"], pend["ppc"], min_score=p.min_score, plan=pend["plan"])["report"]
+        _done_pending(agent, "dream")
+        shown = {tuple(sorted(x)) for ps in pend["plan"] for x in ps}
+        return (report
+                + _unmatched("verdicts were not for a pair shown (ignored)", [f"{a}-{b}" for a, b in table if (a, b) not in shown])
+                + _unmatched("verdicts were for pairs whose memories changed since (skipped)",
+                             [f"{a}-{b}" for a, b in table if (a, b) in shown and (a, b) not in asked]))
     return _safe(go)
 
 
@@ -287,8 +315,8 @@ def poem_pairs(agent: str = "conductor", pairs: int = 3) -> str:
         def record(a, b, sim):
             seen.append({"A": _brief(a), "B": _brief(b)})
             return None
-        _dry_run(agent, lambda s: s.compose(record, pairs, rng=random.Random(seed)))
-        _pending(agent, "poem", {"seed": seed, "pairs": pairs})
+        plan = _dry_run(agent, lambda s: s.compose(record, pairs, rng=random.Random(seed))).get("plan", [])
+        _pending(agent, "poem", {"pairs": pairs, "plan": plan})
         return json.dumps({"pairs": seen, "answer_with": "ens poem-apply (JSON on stdin) or poem_apply: a JSON list, one per pair, of "
                            "{A: id, B: id, figures: [{text, p}] x8, aliases: {A: [{text, p}] x8, B: [...]}, "
                            "glosses: {A, B}, probes: {A, B}, verse}. p = your honest probability of writing "
@@ -310,7 +338,11 @@ def poem_apply(poems: str, agent: str = "conductor") -> str:
                          glosses={"A": w.get("glosses", {}).get("B"), "B": w.get("glosses", {}).get("A")},
                          probes={"A": w.get("probes", {}).get("B"), "B": w.get("probes", {}).get("A")})
             return w
-        return player(agent).memory.compose(poet, pend["pairs"], rng=random.Random(pend["seed"]))["report"]
+        report = player(agent).memory.compose(poet, pend["pairs"], plan=pend["plan"])
+        _done_pending(agent, "poem")
+        used = {tuple(sorted((a, b))) for _, a, b in report["plan"]}
+        return report["report"] + _unmatched("poems were not for a pair shown, or its memories are gone (ignored)",
+                                             [f"{a}-{b}" for a, b in table if (a, b) not in used])
     return _safe(go)
 
 
@@ -323,8 +355,8 @@ def excursion_seeds(agent: str = "conductor", n: int = 1) -> str:
         def record(s, context):
             seen.append({"seed": s, "context": context})
             return None
-        _dry_run(agent, lambda s: s.wander(record, n, rng=random.Random(seed)))
-        _pending(agent, "excursion", {"seed": seed, "n": n})
+        plan = _dry_run(agent, lambda s: s.wander(record, n, rng=random.Random(seed)))["plan"]
+        _pending(agent, "excursion", {"n": n, "plan": plan})
         return json.dumps({"seeds": seen, "answer_with": "ens excursion-apply (JSON on stdin) or excursion_apply: a JSON list of {seed, form: "
                            "build-out|experiment|thought-exercise|hypothesis, title, outcome, surprise, verdict, "
                            "prediction (hypotheses), spawn: [<=2 ideas], ran: what happened if you actually ran "
@@ -338,8 +370,11 @@ def excursion_apply(notes: str, agent: str = "conductor") -> str:
     def go():
         pend = _pending(agent, "excursion")
         table = {n["seed"]: n for n in json.loads(notes)}
-        return player(agent).memory.wander(lambda s, c: table.get(s), pend["n"],
-                                           rng=random.Random(pend["seed"]))["report"]
+        report = player(agent).memory.wander(lambda s, c: table.get(s), pend["n"], plan=pend["plan"])
+        _done_pending(agent, "excursion")
+        used = {p["seed"] for p in report["plan"]}
+        return report["report"] + _unmatched("notes were not for a seed shown, or its memories are gone (ignored)",
+                                             [s[:40] for s in table if s not in used])
     return _safe(go)
 
 

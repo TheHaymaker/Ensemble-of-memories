@@ -380,15 +380,22 @@ class MemoryStore:
     def sleep_due(self, threshold=SLEEP_PRESSURE):
         return self.sleep_pressure() >= threshold
 
-    def sleep(self, judge, cycles=4, pairs_per_cycle=20, rng=None, min_score=0.5):
+    def sleep(self, judge, cycles=4, pairs_per_cycle=20, rng=None, min_score=0.5, plan=None):
+        """A night. `plan` (the "plan" a previous sleep returned) replays exactly those pairs, pass
+        by pass, instead of sampling: a judge that answered pairs in advance is asked about the
+        same pairs even though applying its verdicts changes what fresh sampling would pick."""
         rng = rng or random.Random()
         since = self._load().get("last_sleep", -1)
-        done, totals, log, insights = set(), {}, [], []
+        done, totals, log, insights, used_plan = set(), {}, [], [], []
+        passes = iter(plan) if plan is not None else None
         for i in range(cycles):
             share = 0.8 - 0.6 * (i / max(1, cycles - 1))          # 80% consolidation -> 20%
             nc = round(pairs_per_cycle * share)
-            ec = self._pass(judge, "consolidate", nc, rng, min_score, done, since=since)
-            ea = self._pass(judge, "associate", pairs_per_cycle - nc, rng, min_score, done)
+            ec = self._pass(judge, "consolidate", nc, rng, min_score, done, since=since,
+                            pairs=next(passes, []) if passes else None)
+            ea = self._pass(judge, "associate", pairs_per_cycle - nc, rng, min_score, done,
+                            pairs=next(passes, []) if passes else None)
+            used_plan += [ec["sampled"], ea["sampled"]]
             log.append({"consolidate": nc, "associate": pairs_per_cycle - nc,
                         "found": (ec["connections"], ea["connections"])})
             for ev in (ec, ea):
@@ -411,7 +418,7 @@ class MemoryStore:
                   + (f"; {len(softened)} lessons demoted (cap)" if softened else ""))
         self._atomic(os.path.join(self.root, "dreams.md"), report + "\n")
         return {"report": report, "counts": totals, "cycles": log, "insights": insights, "archived": archived,
-                "lessons": hardened, "demoted": softened}
+                "lessons": hardened, "demoted": softened, "plan": used_plan}
 
     # ------------------------------------------------------------- lessons
     def _harden(self, idx):
@@ -464,9 +471,12 @@ class MemoryStore:
         return self._pass(judge, "daydream", samples, rng or random.Random(), min_score, set(), focus=focus)
 
     # ------------------------------------------------------------ one pass
-    def _pass(self, judge, mode, n, rng, min_score, done, since=-1, focus=None):
-        ev = {"counts": {}, "connections": 0, "insights": [], "proposed": 0, "downgraded": 0, "pairs": 0}
-        if n <= 0:
+    def _pass(self, judge, mode, n, rng, min_score, done, since=-1, focus=None, pairs=None):
+        """One sample-judge-apply pass. Given `pairs`, judge those (minus any whose memories are
+        gone or already judged tonight) instead of sampling."""
+        ev = {"counts": {}, "connections": 0, "insights": [], "proposed": 0, "downgraded": 0, "pairs": 0,
+              "sampled": []}
+        if n <= 0 and not pairs:
             return ev
         fvec = self.emb.encode([focus], "cue")[0] if (focus and self.emb) else None
         # 1. sample
@@ -478,8 +488,19 @@ class MemoryStore:
             sim = self._sim_fn(idx, V)
             pick = {"consolidate": self._pairs_consolidate, "associate": self._pairs_associate,
                     "daydream": self._pairs_daydream}[mode]
-            pairs = pick(idx, sim, n, rng, done, since=since, fvec=fvec, fkw=keywords(focus or ""), V=V)
+            if pairs is None:
+                pairs = pick(idx, sim, n, rng, done, since=since, fvec=fvec, fkw=keywords(focus or ""), V=V)
+            else:
+                fixed = []
+                for a, b in pairs:
+                    if a not in idx["m"] or b not in idx["m"]:
+                        continue
+                    ok, p = self._ok(idx, done, a, b)
+                    if ok and p not in fixed:
+                        fixed.append(p)
+                pairs = fixed
             done.update(pairs)
+            ev["sampled"] = [list(p) for p in pairs]
             snap = {}
             for mid in {x for p in pairs for x in p}:
                 m = idx["m"][mid]
@@ -826,12 +847,13 @@ class MemoryStore:
     #   gloss    a precise restatement (precision, not surprise: gated the same way)
     #   probe    a question testing where a memory or lesson stops holding
     #   verse    a few lines, kept in poems.md (the last 12)
-    def compose(self, poet, pairs=4, rng=None, domain=None, scorer=None):
+    def compose(self, poet, pairs=4, rng=None, domain=None, scorer=None, plan=None):
+        """Poem-making. `plan` (the "plan" a previous compose returned) uses exactly those pairs."""
         rng = rng or random.Random()
         scorer = scorer or word_commonness
         domain = list(domain or [])
         report = {"pairs": 0, "figures": [], "aliases": [], "rejected_aliases": [], "glosses": 0,
-                  "probes": [], "verses": 0, "excluded_as_likely": 0}
+                  "probes": [], "verses": 0, "excluded_as_likely": 0, "plan": []}
         # 1. choose distant pairs (under the lock)
         with self._lock():
             idx = self._load()
@@ -842,7 +864,7 @@ class MemoryStore:
             V = self._vectors().astype(np.float32) if self.emb else None
             sim = self._sim_fn(idx, V)
             cands = []
-            for _ in range(pairs * 15):
+            for _ in range(pairs * 15 if plan is None else 0):
                 a = rng.choice(pool)
                 if domain and rng.random() < 0.3:
                     cands.append((0.0, a, f"domain:{rng.randrange(len(domain))}"))
@@ -855,6 +877,10 @@ class MemoryStore:
             for s, a, b in cands:
                 if len(chosen) < pairs and a not in used and b not in used:
                     chosen.append((s, a, b)); used |= {a, b}
+            if plan is not None:
+                live = lambda k: (k in ms) if not k.startswith("domain:") else int(k.split(":")[1]) < len(domain)
+                chosen = [(s, a, b) for s, a, b in plan if live(a) and live(b)]
+            report["plan"] = [[s, a, b] for s, a, b in chosen]
             snap = {}
             for _, a, b in chosen:
                 for k in (a, b):
@@ -976,9 +1002,10 @@ class MemoryStore:
     # imagined and can never settle a fact. A hypothesis carries a prediction; if a later
     # waking memory matches it, the hypothesis is confirmed and can grow into a lesson.
     # Experiments only execute code through a runner you supply (your own sandbox).
-    def wander(self, explorer, n=1, rng=None, runner=None, max_spawn=2):
+    def wander(self, explorer, n=1, rng=None, runner=None, max_spawn=2, plan=None):
+        """Excursions. `plan` (the "plan" a previous wander returned) explores exactly those seeds."""
         rng = rng or random.Random()
-        report = {"excursions": [], "spawned": [], "predictions": [], "verdicts": {}}
+        report = {"excursions": [], "spawned": [], "predictions": [], "verdicts": {}, "plan": []}
         # 1. choose seeds (under the lock)
         with self._lock():
             idx = self._load()
@@ -995,8 +1022,12 @@ class MemoryStore:
                 elif len(plain) >= 2:                          # two unrelated things: what if?
                     a, b = rng.sample(plain, 2)
                     picks.append({"seed": f"What if \"{self.read(a)}\" met \"{self.read(b)}\"?", "from": [a, b]})
+            if plan is not None:
+                picks = [{"seed": p["seed"], "from": list(p["from"])} for p in plan
+                         if all(k in ms for k in p["from"])]
             for p in picks:
                 p["context"] = [self.read(k) for k in p["from"]]
+            report["plan"] = [{"seed": p["seed"], "from": p["from"]} for p in picks]
         # 2. explore (no lock: the explorer may be an LLM; the runner may take a while)
         notes = []
         for p in picks:

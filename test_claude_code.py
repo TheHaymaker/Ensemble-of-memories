@@ -50,6 +50,31 @@ def test_a_night_through_the_cli():
     return "dream-pairs -> Claude's verdicts -> dream-apply; poem and excursion steps the same way"
 
 
+def test_every_verdict_given_is_applied():
+    """dream-apply judges exactly the pairs dream-pairs showed, even though applying verdicts
+    (and memories written in between) would change what fresh sampling picks."""
+    h = tempfile.mkdtemp()
+    topics = ["staging", "prod", "deploy", "creds", "tests", "ci", "db", "cache", "auth", "logging"]
+    for i in range(1, 37):
+        run(["remember", f"The {topics[i % 10]} setting number {i} uses rotation policy {i % 4} and owner team {i % 3}"], h)
+    pairs = json.loads(run(["dream-pairs"], h))["pairs"]
+    run(["remember", "a subagent wrote this between the two steps"], h)
+    verdicts = [{"a": p["a"]["id"], "b": p["b"]["id"], "op": "add", "score": 0.9, "insight": f"link {i}"}
+                for i, p in enumerate(pairs)]
+    verdicts.append({"a": "m00001", "b": "m00037", "op": "reinforce", "score": 0.9, "insight": None})
+    report = run(["dream-apply"], h, stdin=json.dumps(verdicts))
+    again = run(["dream-apply"], h, stdin=json.dumps(verdicts))
+    assert f"{len(pairs)} pairs; {len(pairs)} add" in report, report
+    assert "1 verdicts were not for a pair shown (ignored): m00001-m00037" in report, report
+    assert again.startswith("error") and "dream-pairs" in again, again
+    pp = json.loads(run(["poem-pairs"], h))["pairs"]
+    run(["remember", "another memory between the poem steps"], h)
+    poem = run(["poem-apply"], h, stdin=json.dumps([{"A": x["A"]["id"], "B": x["B"]["id"], "figures": [], "aliases": {},
+                                                     "verse": "v"} for x in pp]))
+    assert f"{len(pp)} verses" in poem and "ignored" not in poem, poem
+    return f"all {len(pairs)} 'add' verdicts applied despite a write in between; a stray verdict reported; no double apply"
+
+
 def test_the_hook_never_blocks_a_session():
     out = run(["--listen"], "/proc/forbidden/ensemble")
     assert out.startswith("Ensemble unavailable")
