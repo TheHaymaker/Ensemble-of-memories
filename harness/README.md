@@ -93,3 +93,31 @@ reunion RUN                          milestone RUN PROJECT "note"      approve-g
 ens RUN PROJECT -- <args>            claude RUN PROJECT  (interactive, same setup)
 snapshot RUN LABEL                   report RUN                        list
 ```
+
+## Experiment: woven poems in the night (`poem_ab.py`)
+
+Asks: does weaving the night's one-line figures into one longer poem, and showing that poem to
+dreams, poem-making and excursions as a lens, make those steps more useful? `lab.py fork` copies a
+run as it stands, so both arms start from the same memory and code. `ENSEMBLE_NIGHT_SEED` gives both
+arms the same pairs and seeds. A blind Claude judge then grades every item from both arms against
+the code, with the items shuffled together.
+
+```bash
+python3 harness/poem_ab.py base pab1                          # 3 projects: 3 sessions, a night, 1 session
+python3 harness/poem_ab.py arms pab1 --tag 2 --night-seed 11  # fork into control / poems, one night each
+python3 harness/poem_ab.py judge pab1 --tag 2 && python3 harness/poem_ab.py report pab1 --tag 2
+```
+
+Results, 2026-11-27 (recipe-core, pantry-tracker, grocery-bot; about 35 items per arm per run). "Valuable" means the
+judge found the item true of the code, new, and at least somewhat useful:
+
+| run | probes valuable | dream verdicts valuable | excursions valuable | all valuable | cost per night |
+|---|---|---|---|---|---|
+| 1, unmatched pairs: control / poems | 6/18 / 1/18 | 5/6 / 8/9 | 7/9 / 4/9 | 18/33 / 13/36 | $0.54 / $0.57 |
+| 2, matched pairs: control / poems | 0/17 / 3/18 | 4/6 / 5/9 | 6/9 / 7/9 | 10/32 / 15/36 | $0.54 / $0.62 |
+
+With matched pairs (run 2), no difference was significant: every Fisher p was 0.23 or higher. Run 1's
+lower probe grounding for the poems arm (p = 0.001) came with different pairs in each arm, and the
+matched run didn't reproduce it. Which pairs a night draws matters far more than the lens: control probes were grounded 17/18 in run 1 and 5/17 in run 2. Longer poems were set aside after this: weaving (`ENSEMBLE_WEAVE`) and the lens
+(`ENSEMBLE_POEM_LENS`) are both off by default and kept only for experiments, and the one-line poems stay
+as a playful feature. A real effect would need several seeds per project to show through the noise.

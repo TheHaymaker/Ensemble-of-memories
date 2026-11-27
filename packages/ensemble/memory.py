@@ -57,6 +57,7 @@ SLEEP_PRESSURE = 30                # new waking memories that make sleep due
 INSIGHT_OPS = ("add", "qualify", "tension")   # verdicts whose insight is stored as a new memory
 DREAM_SOURCES = ("dream", "qualify", "tension", "poem", "probe", "excursion", "prediction")
 IMAGINED = ("poem", "probe", "excursion", "prediction")   # language and play: never referents, never facts
+WOVEN_KEEP = 6                     # composed (woven) poems kept
 PRECISION_MARGIN = 0.02            # an alias must be this much closer to its memory than to any other
 LESSON_USES, LESSON_NIGHTS, LESSON_CAP = 4, 2, 40   # what it takes to harden into a lesson; most lessons kept
 # (8 uses over 3 nights in long-term was reachable in 600-beat simulations, never in a project with a
@@ -988,9 +989,8 @@ class MemoryStore:
                 if kept_any:
                     for k in real:
                         self._dream_buff(idx["m"][k], now, float(w.get("score", 0.6)))
-            poems = idx.get("poems", [])
-        self._atomic(os.path.join(self.root, "poems.md"), "# Poems\n\n" + "\n".join(
-            f"*beat {p['beat']}, from \"{p['from'][0]}\" and \"{p['from'][1]}\"*\n\n{p['verse']}\n" for p in poems))
+            poems, composed = idx.get("poems", []), idx.get("composed", [])
+        self._write_poems(poems, composed)
         report["report"] = (f"composed from {report['pairs']} disparate pairs: {len(report['figures'])} figures, "
                             f"{len(report['aliases'])} aliases kept ({len(report['rejected_aliases'])} memories had no "
                             f"candidate precise enough), {report['excluded_as_likely']} candidates refused as too likely, "
@@ -1037,6 +1037,66 @@ class MemoryStore:
 
     def poems(self):
         return self._load().get("poems", [])
+
+    # ============================================================ weaving
+    #
+    # Consolidation for poems. Each night's poem step leaves one-line figures scattered in memory,
+    # each about two unlikely memories. Weaving hands the unwoven figures (with the memories they
+    # came from) and the recent verses to a weaver that composes ONE longer poem from them: the
+    # figures read together, not in isolation. The woven figures are marked, so the next weave
+    # starts from fresh ones. A composed poem is not a memory and never a fact: it lives in
+    # idx["composed"] (the last WOVEN_KEEP) and poems.md, and later night steps can read it as a lens.
+    def weave(self, weaver, min_figures=2, max_figures=12, plan=None):
+        """weaver(figures, verses) -> {"title", "text", "from": [figure ids it drew on]} or None.
+        `plan` (the "plan" a previous weave returned) offers exactly those figures."""
+        report = {"woven": None, "figures": 0, "plan": []}
+        with self._lock():
+            idx = self._load()
+            ms = idx["m"]
+            if plan is not None:
+                ids = [k for k in plan if k in ms]
+            else:
+                ids = [k for k, m in ms.items() if m.get("src") == "poem" and "woven" not in m]
+                ids = sorted(ids, key=lambda k: ms[k]["born"])[-max_figures:]
+            report["plan"] = ids
+            if len(ids) < min_figures:
+                return dict(report, report=f"nothing to weave: {len(ids)} unwoven figures (need {min_figures})")
+            figures = [{"id": k, "text": self.read(k),
+                        "from": [self.read(p) for p in ms[k].get("parents", []) if p in ms]} for k in ids]
+            verses = [p["verse"] for p in idx.get("poems", [])[-6:]]
+        report["figures"] = len(figures)
+        w = weaver(figures, verses)
+        text = (w or {}).get("text") or ""
+        used = [k for k in (w or {}).get("from") or [] if k in ids]
+        if len(text.strip().splitlines()) < 4 or len(used) < 2:
+            return dict(report, report="the weave was too short (under 4 lines) or drew on under 2 figures: not kept")
+        with self._txn() as idx:
+            now = idx["beat"]
+            for k in used:
+                if k in idx["m"]:
+                    idx["m"][k]["woven"] = now
+            entry = {"beat": now, "title": (w.get("title") or "untitled").strip(), "text": text.strip(), "from": used}
+            idx.setdefault("composed", []).append(entry)
+            idx["composed"] = idx["composed"][-WOVEN_KEEP:]
+            poems, composed = idx.get("poems", []), idx["composed"]
+        self._write_poems(poems, composed)
+        report["woven"] = entry
+        report["report"] = (f"wove {len(used)} of {len(figures)} figures into \"{entry['title']}\" "
+                            f"({len(entry['text'].splitlines())} lines)")
+        return report
+
+    def composed(self):
+        """Composed (woven) poems, oldest first."""
+        return self._load().get("composed", [])
+
+    def _write_poems(self, poems, composed=None):
+        out = "# Poems\n\n"
+        if composed:
+            out += "## Woven\n\n" + "\n".join(f"### {c['title']} (beat {c['beat']})\n\n{c['text']}\n" for c in composed)
+            out += "\n## Verses\n\n"
+        out += "\n".join(f"*beat {p['beat']}, from \"{p['from'][0]}\" and \"{p['from'][1]}\"*\n\n{p['verse']}\n"
+                         for p in poems)
+        self._atomic(os.path.join(self.root, "poems.md"), out)
 
     # ============================================================== excursions
     #

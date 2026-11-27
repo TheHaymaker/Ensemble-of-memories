@@ -22,6 +22,12 @@ Environment:
     ENSEMBLE_ROSTER     players (default conductor,builder,reviewer,tester)
     ENSEMBLE_EMBEDDER   keywords (default) | hybrid | model2vec | gemini | st   (fixed once a store exists)
     ENSEMBLE_SLEEP_AT   new memories that make sleep due (default 30)
+    ENSEMBLE_WEAVE      1: a night first weaves earlier one-line figures into one longer poem (default 0:
+                        an experiment that showed no measurable benefit; poems stay a playful one-liner feature)
+    ENSEMBLE_POEM_LENS  1: dreams, poems and excursions see the latest woven poem as a lens (default 0:
+                        in two blind A/Bs it made no measurable difference; see harness/README.md)
+    ENSEMBLE_EXCURSIONS excursion seeds per night (default 1)
+    ENSEMBLE_NIGHT_SEED fixes which pairs and seeds a night picks (experiments: two arms see the same ones)
 
 `ens --listen` prints the conductor's view, never failing: use it as a SessionStart hook. On a new
 session (the hook's input says source "startup") it first advances the beat: one session, one beat.
@@ -45,6 +51,18 @@ from tools import Player                      # noqa: E402
 HOME = os.path.expanduser(os.environ.get("ENSEMBLE_HOME", "~/.ensemble"))
 ROSTER = [r.strip() for r in os.environ.get("ENSEMBLE_ROSTER", "conductor,builder,reviewer,tester").split(",") if r.strip()]
 SLEEP_AT = int(os.environ.get("ENSEMBLE_SLEEP_AT", "30"))
+WEAVE = os.environ.get("ENSEMBLE_WEAVE", "0") != "0"
+POEM_LENS = os.environ.get("ENSEMBLE_POEM_LENS", "0") != "0"
+EXCURSIONS = int(os.environ.get("ENSEMBLE_EXCURSIONS", "1"))
+
+
+def _seed(step):
+    """A night step's random seed: fixed by ENSEMBLE_NIGHT_SEED (per step), else fresh."""
+    fixed = os.environ.get("ENSEMBLE_NIGHT_SEED")
+    return (int(fixed) * 7919 + step) % (1 << 30) if fixed else random.randrange(1 << 30)
+LENS = ("A poem woven on an earlier night from this memory's one-line figures. It is a lens, not "
+        "evidence: let it suggest where a memory bends, what two memories share, or what to try; "
+        "decide only from the memories themselves (and the code, if you check).")
 
 
 def project_name():
@@ -128,7 +146,8 @@ def _pending(agent, kind, data=None):
     """Save step 1's plan for step 2 (data given), or load it. Step 2 needs step 1's exact plan."""
     p = os.path.join(paths(member())[1], agent, f"pending_{kind}.json")
     if data is None:
-        step1 = {"dream": "dream-pairs", "poem": "poem-pairs", "excursion": "excursion-seeds"}[kind]
+        step1 = {"dream": "dream-pairs", "poem": "poem-pairs", "excursion": "excursion-seeds",
+                 "weave": "poem-weave"}[kind]
         if not os.path.exists(p):
             raise RuntimeError(f"nothing pending: run `ens {step1}` first")
         with open(p) as f:
@@ -163,6 +182,15 @@ def _dry_run(agent, run):
         return run(MemoryStore(dst, emb()))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _lens(agent, out):
+    """Add the latest woven poem to a night step's JSON (ENSEMBLE_POEM_LENS=1)."""
+    if POEM_LENS:
+        woven = player(agent).memory.composed()
+        if woven:
+            out["poem"] = {"title": woven[-1]["title"], "text": woven[-1]["text"], "read_as": LENS}
+    return out
 
 
 def _brief(m):
@@ -263,7 +291,7 @@ def dream_pairs(agent: str = "conductor", cycles: int = 4, pairs_per_cycle: int 
     """Night, step 1: the memory pairs tonight's sleep will replay, for you to judge. Answer each
     with dream_apply. Run through the /ensemble-night skill."""
     def go():
-        seed = random.randrange(1 << 30)
+        seed = _seed(1)
         seen = []
 
         def record(a, b, sim):
@@ -271,9 +299,9 @@ def dream_pairs(agent: str = "conductor", cycles: int = 4, pairs_per_cycle: int 
             return None
         plan = _dry_run(agent, lambda s: s.sleep(record, cycles, pairs_per_cycle, rng=random.Random(seed)))["plan"]
         _pending(agent, "dream", {"cycles": cycles, "ppc": pairs_per_cycle, "plan": plan})
-        return json.dumps({"pairs": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens dream-apply --file {ANSWER_FILE} (or the dream_apply tool). Each item: "
+        return json.dumps(_lens(agent, {"pairs": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens dream-apply --file {ANSWER_FILE} (or the dream_apply tool). Each item: "
                            "{a, b, op: none|reinforce|add|qualify|substitute|subtract|tension, score 0-1, "
-                           "keep: id (substitute/subtract), insight: one sentence or null}"}, separators=(",", ":"))
+                           "keep: id (substitute/subtract), insight: one sentence or null}"}), separators=(",", ":"))
     return _safe(go)
 
 
@@ -311,17 +339,17 @@ def poem_pairs(agent: str = "conductor", pairs: int = 3) -> str:
     """Poem-making, step 1: disparate memory pairs to make poems from. Not sense-making: refuse
     the likely. Answer with poem_apply."""
     def go():
-        seed, seen = random.randrange(1 << 30), []
+        seed, seen = _seed(2), []
 
         def record(a, b, sim):
             seen.append({"A": _brief(a), "B": _brief(b)})
             return None
         plan = _dry_run(agent, lambda s: s.compose(record, pairs, rng=random.Random(seed))).get("plan", [])
         _pending(agent, "poem", {"pairs": pairs, "plan": plan})
-        return json.dumps({"pairs": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens poem-apply --file {ANSWER_FILE} (or poem_apply), one item per pair: "
+        return json.dumps(_lens(agent, {"pairs": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens poem-apply --file {ANSWER_FILE} (or poem_apply), one item per pair: "
                            "{A: id, B: id, figures: [{text, p}] x8, aliases: {A: [{text, p}] x8, B: [...]}, "
                            "glosses: {A, B}, probes: {A, B}, verse}. p = your honest probability of writing "
-                           "it; sample from the tails (p < 0.10). The likelier half is always refused."}, separators=(",", ":"))
+                           "it; sample from the tails (p < 0.10). The likelier half is always refused."}), separators=(",", ":"))
     return _safe(go)
 
 
@@ -348,20 +376,20 @@ def poem_apply(poems: str, agent: str = "conductor") -> str:
 
 
 @tool
-def excursion_seeds(agent: str = "conductor", n: int = 1) -> str:
+def excursion_seeds(agent: str = "conductor", n: int = 0) -> str:
     """Excursions, step 1: seeds to explore out of curiosity (silly is fine). Answer with excursion_apply."""
     def go():
-        seed, seen = random.randrange(1 << 30), []
+        seed, seen, k = _seed(3), [], n or EXCURSIONS
 
         def record(s, context):
             seen.append({"seed": s, "context": context})
             return None
-        plan = _dry_run(agent, lambda s: s.wander(record, n, rng=random.Random(seed)))["plan"]
-        _pending(agent, "excursion", {"n": n, "plan": plan})
-        return json.dumps({"seeds": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens excursion-apply --file {ANSWER_FILE} (or excursion_apply). Each item: {{seed, form: "
+        plan = _dry_run(agent, lambda s: s.wander(record, k, rng=random.Random(seed)))["plan"]
+        _pending(agent, "excursion", {"n": k, "plan": plan})
+        return json.dumps(_lens(agent, {"seeds": seen, "answer_with": f"write a JSON list to {ANSWER_FILE}, then ens excursion-apply --file {ANSWER_FILE} (or excursion_apply). Each item: {{seed, form: "
                            "build-out|experiment|thought-exercise|hypothesis, title, outcome, surprise, verdict, "
                            "prediction (hypotheses), spawn: [<=2 ideas], ran: what happened if you actually ran "
-                           "something}"}, separators=(",", ":"))
+                           "something}"}), separators=(",", ":"))
     return _safe(go)
 
 
@@ -376,6 +404,44 @@ def excursion_apply(notes: str, agent: str = "conductor") -> str:
         used = {p["seed"] for p in report["plan"]}
         return report["report"] + _unmatched("notes were not for a seed shown, or its memories are gone (ignored)",
                                              [s[:40] for s in table if s not in used])
+    return _safe(go)
+
+
+@tool
+def poem_weave(agent: str = "conductor") -> str:
+    """Night, first step: weave the one-line figures of earlier nights into one longer poem
+    (consolidation). Answer with weave_apply. Prints {"skip": ...} when there is nothing to weave."""
+    def go():
+        if not WEAVE:
+            return json.dumps({"skip": "weaving is off (ENSEMBLE_WEAVE=0): go on to the dreams"})
+        seen = {}
+
+        def record(figures, verses):
+            seen.update(figures=figures, verses=verses)
+            return None
+        plan = _dry_run(agent, lambda s: s.weave(record))
+        if not seen:
+            return json.dumps({"skip": plan["report"] + ": go on to the dreams"})
+        _pending(agent, "weave", {"plan": plan["plan"]})
+        return json.dumps({**seen, "answer_with": f"write a JSON object to {ANSWER_FILE}, then ens weave-apply --file "
+                           f"{ANSWER_FILE}: {{title, text: the poem, 8-24 lines, newlines as \\n, "
+                           "from: [ids of the figures it draws on]}. One poem that reads the figures together: "
+                           "keep their strangeness and exact referents, let them answer and complicate each "
+                           "other, don't explain them or end on a moral."}, separators=(",", ":"))
+    return _safe(go)
+
+
+@tool
+def weave_apply(woven: str, agent: str = "conductor") -> str:
+    """Night, weave step 2: keep the woven poem; its figures are marked woven."""
+    def go():
+        pend = _pending(agent, "weave")
+        w = json.loads(woven)
+        if isinstance(w, list):
+            w = w[0] if w else {}
+        report = player(agent).memory.weave(lambda f, v: w, plan=pend["plan"])
+        _done_pending(agent, "weave")
+        return report["report"]
     return _safe(go)
 
 
@@ -478,6 +544,7 @@ USAGE = """ens: shared memory and coordination for this project (Ensemble)
   ens write-note "text"   ens read-part builder   ens vote q yes 0.8   ens lessons
   ens open-question q --text "what is being decided"   ens close-question q   ens next-beat
   ens dream-pairs | ens dream-apply --file .ensemble-answer.json      (night: Claude judges)
+  ens poem-weave  | ens weave-apply --file ...   (night: older figures woven into one poem)
   ens poem-pairs  | ens poem-apply --file ...   ens excursion-seeds | ens excursion-apply --file ...
   ens family-tree   ens family-reunion   ens approve-generation   ens decline-generation
   ens declare-milestone "v2 rewrite"   ens approve-kin other-project   ens adopt-saying s0004   ens whoami
@@ -518,7 +585,7 @@ def cli(argv):
     if fn is None:
         print(f"unknown command {argv[0]}\n\n{USAGE}"); return 2
     params = inspect.signature(fn).parameters
-    json_param = next((p for p in ("verdicts", "poems", "notes") if p in params), None)
+    json_param = next((p for p in ("verdicts", "poems", "notes", "woven") if p in params), None)
     if any(a in ("-h", "--help") for a in argv[1:]):
         print(command_help(argv[0], fn, json_param)); return 0
     kwargs, pos, i, answer_file = {}, [], 1, None

@@ -135,6 +135,35 @@ def test_figures_are_hypotheses_and_verses_stay_flat():
     return "figures start as unconfirmed ideas (confirmed after 2 waking uses); 15 sessions left the last 12 verses in poems.md"
 
 
+def test_weaving_consolidates_figures_into_one_poem():
+    s = store("weave")
+    two(s)
+    figs = []
+    for i in range(4):
+        rep = s.compose(Scripted(figures=[f"figure {i} alpha", f"figure {i} zeta-quill"], aliases_a=[],
+                                 verse=f"verse {i}"), pairs=1, rng=random.Random(i))
+        figs += rep["figures"]
+    seen = {}
+
+    def weaver(figures, verses):
+        seen.update(n=len(figures), verses=len(verses), parents=figures[0]["from"])
+        return {"title": "Quills", "text": "one\ntwo\nthree\nfour\nfive", "from": figs[:3] + ["m99999"]}
+    rep = s.weave(weaver)
+    m = s._load()["m"]
+    assert seen["n"] == 4 and seen["verses"] == 4 and seen["parents"]
+    assert rep["woven"]["from"] == figs[:3] and all("woven" in m[f] for f in figs[:3]) and "woven" not in m[figs[3]]
+    assert s.composed()[-1]["title"] == "Quills" and "### Quills" in open(os.path.join(s.root, "poems.md")).read()
+    again = s.weave(weaver)                                  # one unwoven figure left: nothing to weave
+    assert again["woven"] is None and len(s.composed()) == 1
+    short = store("weave-short")
+    two(short)
+    for i in range(3):
+        short.compose(Scripted(figures=[f"f{i} a", f"f{i} zeta"], aliases_a=[]), pairs=1, rng=random.Random(i))
+    bad = short.weave(lambda f, v: {"title": "x", "text": "a\nb", "from": [x["id"] for x in f]})
+    assert bad["woven"] is None and not short.composed()
+    return "4 figures offered, 3 woven (an unknown id ignored), the 4th waits; a 2-line weave is refused"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]
     failed = 0

@@ -1,18 +1,39 @@
 ---
 name: ensemble-night
-description: Run a night for this project's Ensemble memory: judge the dream pairs, make poems that refuse the likely, and go on curious excursions. Use when `ens listen` says sleep is due, or when the user asks to sleep, dream or consolidate memory.
+description: Run a night for this project's Ensemble memory: weave earlier poems into one, judge the dream pairs, make poems that refuse the likely, and go on curious excursions. Use when `ens listen` says sleep is due, or when the user asks to sleep, dream or consolidate memory.
 allowed-tools: Bash(ens *)
 ---
 
 # A night
 
-You are the sleeping, dreaming and playing mind of this project. Three steps; each prints JSON,
+You are the sleeping, dreaming and playing mind of this project. A weave and three steps; each prints JSON,
 and you answer with JSON in a file. Add `--agent NAME` throughout to run a subagent's night.
 
 **How to answer:** write the JSON with your Write tool to `.ensemble-answer.json` in the project
 folder, then run the apply command with `--file .ensemble-answer.json`. Ensemble deletes that file
 once it has applied it. Don't put JSON on the command line or in a heredoc: Claude Code's shell
 check refuses quoted braces in commands. `ens <command> --help` explains any step.
+
+## 0. Weave (consolidating the poems)
+
+Run `ens poem-weave`. It is off unless this project opted in, so it usually prints `skip`: then go on
+to the dreams. Otherwise it shows the one-line
+figures earlier nights left behind, each with the memories it came from, and recent verses. Compose
+ONE poem from them, 8 to 24 lines: read the figures together so they answer and complicate each other.
+Keep their strangeness and their exact referents; don't explain them, summarize the project, or end
+on a moral. `from` lists the figure ids the poem draws on (at least two).
+
+`.ensemble-answer.json`:
+
+```json
+{"title":"...","text":"line one\nline two\n...","from":["m00011","m00014","m00017"]}
+```
+
+then `ens weave-apply --file .ensemble-answer.json`.
+
+From here on, a step's JSON may carry a `poem`: the latest woven poem. Read it before you answer.
+It is a lens, not evidence: it may show you where a memory bends or what two memories share, but
+decide from the memories (and the code) alone.
 
 ## 1. Dreams (sense-making)
 
