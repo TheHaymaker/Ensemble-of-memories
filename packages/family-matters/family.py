@@ -347,7 +347,7 @@ class Family:
 
     def describe_origin(self, fam, name, item):
         if "members" in item:
-            return f"family wisdom, seen in {', '.join(item['members'])}"
+            return f"family lore, seen in {', '.join(item['members'])}"
         gens = fam["members"][name]["gen"] - item["gen"]
         who = item["from"]
         rel = {1: "your parent", 2: "your grandparent"}.get(gens, f"{gens} generations back")

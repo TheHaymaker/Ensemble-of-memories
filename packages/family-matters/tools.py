@@ -7,6 +7,15 @@ import functools
 
 from ensemble import CAP, Ensemble
 
+# What the family calls things. Storage keeps the engine's words (tier "lesson", "dormant", sayings,
+# heirlooms), so stores from before the Family Matters rename load unchanged; only what is shown changes.
+SHOW_TIER = {"dormant": "repressed", "lesson": "trauma"}
+SHOW_KIND = {"saying": "advice", "heirloom": "baggage", "wisdom": "lore"}
+
+
+def show_tier(tier):
+    return SHOW_TIER.get(tier, tier)
+
 
 def _safe(fn):
     @functools.wraps(fn)
@@ -86,11 +95,11 @@ class Player:
                         lines.append(f'  (Does "{t["a_text"][:80]}" take precedence over "{t["b_text"][:80]}"?)')
             context = " ".join(f"{q} {r.get('text', '')}" for q, r in st["score"].items())
             for l in self.memory.lessons_for(context):
-                lines.append(f"lesson {l['id']}: {self.memory.read(l['id'])}")
+                lines.append(f"trauma {l['id']}: {self.memory.read(l['id'])}")
             if self.family is not None and self.name == self.e.conductor:
                 sug = self.family.suggest(self.member)
                 if sug:
-                    lines.append(f"suggest: {self.member} may be ready for a new generation ("
+                    lines.append(f"suggest: {self.member} may be ready to move out as a new generation ("
                                  f"{'; '.join(sug['reasons'])}). Awaiting your approval.")
             if self.family is not None:
                 fam = self.family._load()
@@ -104,8 +113,9 @@ class Player:
         return "\n".join(lines)
 
     def _family_lines(self, fam, items):
-        return [f"family {a['kind']} {a['id']} ({self.family.describe_origin(fam, self.member, a['item'])}, "
-                f"advice only): {a['item']['text']}" for a in items]
+        return [f"family {SHOW_KIND.get(a['kind'], a['kind'])} {a['id']} ("
+                f"{self.family.describe_origin(fam, self.member, a['item'])}, unsolicited, advice only): "
+                f"{a['item']['text']}" for a in items]
 
     @_safe
     def read_part(self, agent: str) -> str:
@@ -212,7 +222,7 @@ class Player:
         if not near:
             return f"stored {mid}"
         return (f"stored {mid}. Close to: " + "; ".join(f'{n["id"]} "{n["head"][:70]}"' for n in near)
-                + f". If {mid} overturns one of these, run: ens replace-memory OLD_ID {mid}")
+                + f". If {mid} overturns one of these, run: fam revise-history OLD_ID {mid}")
 
     @_safe
     def replace_memory(self, old_id: str, new_id: str) -> str:
@@ -226,7 +236,7 @@ class Player:
         """Search your memory by meaning. strength (0 to 1) is how strongly the situation
         calls for it: only a strong, closely matching cue wakes a dormant memory."""
         hits = self.memory.recall(cue, strength)
-        lines = [f"{h['id']} [{h['how']}, {h['tier']}, sim {h['similarity']}"
+        lines = [f"{h['id']} [{h['how']}, {show_tier(h['tier'])}, sim {h['similarity']}"
                  + (f", OUTDATED: see {h['superseded_by']}" if h.get("superseded_by") else "")
                  + (f", current answer, replaces {', '.join(h['replaces'])}" if h["how"] == "replacement" else "")
                  + f"] {self.memory.describe(h['id'])}" for h in hits]
@@ -241,13 +251,13 @@ class Player:
         if row and row.get("superseded_by"):        # relying on what was overturned should not revive it
             return f"{memory_id} was replaced by {row['superseded_by']}: use that one instead (nothing changed)"
         r = self.memory.use(memory_id)
-        return f"{r['id']} now {r['tier']} {r['strength']:.2f}"
+        return f"{r['id']} now {show_tier(r['tier'])} {r['strength']:.2f}"
 
     @_safe
     def lessons(self) -> str:
-        """List your lessons: hardened knowledge that does not fade and that only a vote can overturn."""
+        """List your trauma (lessons): hardened knowledge that never fades and that only a vote can overturn."""
         ls = self.memory.lessons()
-        return "\n".join(f"{l['id']}: {l['text']}" for l in ls) or "no lessons yet"
+        return "\n".join(f"{l['id']}: {l['text']}" for l in ls) or "no trauma yet (give it time)"
 
     @_safe
     def adopt_saying(self, saying_id: str) -> str:
@@ -256,7 +266,7 @@ class Player:
         fam = self.family._load()
         s = fam["sayings"].get(saying_id) or fam["heirlooms"].get(saying_id)
         if s is None:
-            return f"no family saying or heirloom {saying_id}"
+            return f"no family advice or baggage {saying_id}"
         mid = self.memory.remember(s["text"], 0.5, source=f"family:{saying_id}")
         return f"adopted as {mid} (inherited, unconfirmed)"
 

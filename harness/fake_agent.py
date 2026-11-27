@@ -1,8 +1,8 @@
-"""An offline stand-in for Claude: drives `ens` the way the skills ask, with no model calls.
+"""An offline stand-in for Claude: drives `fam` the way the skills ask, with no model calls.
 
-It is not meant to be smart. It lets you test the harness and Ensemble's mechanics (fading,
-promotion, nights, lessons, family inheritance) quickly and for free, e.g. 20 nights in a minute.
-Its judgments are deterministic per run, so two runs on the same Ensemble code match.
+It is not meant to be smart. It lets you test the harness and Family Matters' mechanics (fading,
+promotion, therapy nights, trauma (lessons), family inheritance) quickly and for free, e.g. 20 nights in a minute.
+Its judgments are deterministic per run, so two runs on the same code match.
 
 Session: listen, recall the task, use what it recalls, remember the task's expected memories.
 Night:   reinforce close pairs, add a link for middling ones, a few qualify/tension verdicts;
@@ -21,29 +21,29 @@ def _rng(*parts):
 
 
 def session(r, project, task):
-    calls = ["ens --listen (hook)"]
-    r.ens(project, "--listen", stdin='{"hook_event_name": "SessionStart", "source": "startup"}')   # as the hook does
-    found = r.ens(project, "recall", task.get("title") or task["prompt"][:80])
-    calls.append("ens recall")
+    calls = ["fam --listen (hook)"]
+    r.fam(project, "--listen", stdin='{"hook_event_name": "SessionStart", "source": "startup"}')   # as the hook does
+    found = r.fam(project, "bring-up", task.get("title") or task["prompt"][:80])
+    calls.append("fam bring-up")
     for line in found.splitlines():
         mid = line.split()[0] if line[:1] == "m" and line[1:6].isdigit() else None
         if mid:
-            r.ens(project, "use-memory", mid)
-            calls.append("ens use-memory")
+            r.fam(project, "told-you-so", mid)
+            calls.append("fam told-you-so")
     for x in task.get("expect", []):
-        r.ens(project, "remember", x, "--importance", "0.7")
-        calls.append("ens remember")
-    r.ens(project, "write-note", f"last task: {task.get('title', task['id'])}")
-    calls.append("ens write-note")
+        r.fam(project, "never-forget", x, "--importance", "0.7")
+        calls.append("fam never-forget")
+    r.fam(project, "vent", f"last task: {task.get('title', task['id'])}")
+    calls.append("fam vent")
     return {"ens_calls": calls, "cost_usd": None, "turns": None, "result": "fake session"}
 
 
 def night(r, project):
-    rng = _rng(r.name, project, r.ens(project, "listen").splitlines()[0])
+    rng = _rng(r.name, project, r.fam(project, "dinner").splitlines()[0])
     calls = []
 
-    pairs = json.loads(r.ens(project, "dream-pairs"))["pairs"]
-    calls.append("ens dream-pairs")
+    pairs = json.loads(r.fam(project, "dream-pairs"))["pairs"]
+    calls.append("fam dream-pairs")
     verdicts = []
     for p in pairs:
         a, b, sim = p["a"], p["b"], p["similarity"]
@@ -64,11 +64,11 @@ def night(r, project):
         if op in ("add", "qualify", "tension"):
             v["insight"] = f"{a['text'][:60]} / {b['text'][:60]}: {'linked' if op == 'add' else 'each holds in its own case'}"
         verdicts.append(v)
-    out = r.ens(project, "dream-apply", stdin=json.dumps(verdicts))
-    calls.append("ens dream-apply")
+    out = r.fam(project, "dream-apply", stdin=json.dumps(verdicts))
+    calls.append("fam dream-apply")
 
-    poems = json.loads(r.ens(project, "poem-pairs"))["pairs"]
-    calls.append("ens poem-pairs")
+    poems = json.loads(r.fam(project, "poem-pairs"))["pairs"]
+    calls.append("fam poem-pairs")
     ans = []
     for p in poems:
         A, B = p["A"], p["B"]
@@ -82,16 +82,16 @@ def night(r, project):
                     "probes": {"A": f"when does '{A['text'][:40]}' stop holding?", "B": None},
                     "verse": f"{rng.choice(WORDS)} and {rng.choice(WORDS)},\n{A['text'][:30]}... {B['text'][:30]}..."})
     if poems:
-        out += "\n" + r.ens(project, "poem-apply", stdin=json.dumps(ans))
-        calls.append("ens poem-apply")
+        out += "\n" + r.fam(project, "poem-apply", stdin=json.dumps(ans))
+        calls.append("fam poem-apply")
 
-    seeds = json.loads(r.ens(project, "excursion-seeds"))["seeds"]
-    calls.append("ens excursion-seeds")
+    seeds = json.loads(r.fam(project, "excursion-seeds"))["seeds"]
+    calls.append("fam excursion-seeds")
     notes = [{"seed": s["seed"], "form": "hypothesis" if rng.random() < 0.5 else "thought-exercise",
               "title": f"what if {s['seed'][:40]}", "outcome": "imagined it through", "surprise": "little",
               "verdict": rng.choice(["silly", "plausible", "trivial"]),
               "prediction": f"a later task will touch {s['seed'][:30]}", "spawn": []} for s in seeds]
     if seeds:
-        out += "\n" + r.ens(project, "excursion-apply", stdin=json.dumps(notes))
-        calls.append("ens excursion-apply")
+        out += "\n" + r.fam(project, "excursion-apply", stdin=json.dumps(notes))
+        calls.append("fam excursion-apply")
     return {"ens_calls": calls, "cost_usd": None, "turns": None, "result": out[:2000]}

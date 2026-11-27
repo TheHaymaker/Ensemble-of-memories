@@ -1,5 +1,5 @@
 {
-  "about": "How the test projects are related. Parents must have joined the Ensemble family before a child's first session; the harness takes care of that.",
+  "about": "How the test projects are related. Parents must have joined the family before a child's first session; the harness takes care of that.",
   "projects": {
     "recipe-core":    {"parents": []},
     "meal-planner":   {"parents": ["recipe-core"]},

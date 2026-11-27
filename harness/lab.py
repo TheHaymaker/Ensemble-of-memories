@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""lab: run Claude sessions against the test projects with Ensemble, in an isolated home per run.
+"""lab: run Claude sessions against the test projects with Family Matters, in an isolated home per run.
 
-    python3 harness/lab.py setup                         one-time: a venv with Ensemble's deps (.lab/venv)
+    python3 harness/lab.py setup                         one-time: a venv with Family Matters' deps (.lab/venv)
     python3 harness/lab.py play saga1 harness/scenarios/family-saga.json     run a whole scenario
     python3 harness/lab.py play smoke harness/scenarios/smoke.json --fake    same, no Claude (offline stand-in)
-    python3 harness/lab.py play saga4 harness/scenarios/family-saga.json --env ENSEMBLE_EMBEDDER=hybrid
+    python3 harness/lab.py play saga4 harness/scenarios/family-saga.json --env FAM_EMBEDDER=hybrid
     python3 harness/lab.py report saga1                  write runs/saga1/report.md
 
 Step by step:
-    new RUN [--projects a,b] [--env K=V]...             make runs/RUN: frozen Ensemble copy, work copies, empty home
+    new RUN [--projects a,b] [--env K=V]...             make runs/RUN: frozen code copy, work copies, empty home
     session RUN PROJECT TASK_ID [--prompt "..."]        one headless Claude session on one task
-    night RUN PROJECT                                    one headless /ensemble-night
+    night RUN PROJECT                                    one headless /family-therapy (a night)
     reunion RUN | milestone RUN PROJECT "note" | approve-generation RUN PROJECT
-    ens RUN PROJECT -- <ens args>                        run `ens` as that project, in that run's home
+    fam RUN PROJECT -- <fam args>                        run `fam` as that project, in that run's home (alias: ens)
     claude RUN PROJECT                                   open an interactive Claude in that project, same setup
     fork SRC RUN [--env K=V]...                         copy run SRC as it stands into RUN (A/B arms from one state)
     snapshot RUN LABEL | report RUN | list
 
-Nothing touches ~/.ensemble or ~/.claude: each run has its own ENSEMBLE_HOME, its own copy of
-Ensemble's code (so later edits don't change a run halfway), and project-level skills and hook
+Nothing touches ~/.family-matters or ~/.claude: each run has its own FAM_HOME, its own copy of
+the code (so later edits don't change a run halfway), and project-level skills and hook
 inside each work copy. See harness/README.md.
 """
 import argparse
@@ -32,7 +32,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-PKG = os.path.join(REPO, "packages", "ensemble")
+PKG = os.path.join(REPO, "packages", "family-matters")
 TEST_PROJECTS = os.path.join(REPO, "test-projects")
 RUNS = os.environ.get("LAB_RUNS", os.path.join(REPO, "runs"))
 VENV = os.environ.get("LAB_VENV", os.path.join(REPO, ".lab", "venv"))
@@ -41,19 +41,24 @@ VPY = os.path.join(VENV, "bin", "python")
 # Tools a headless session may use without asking. Work copies are throwaway, but Bash is still
 # your machine, so it is limited to the commands a session on these projects needs.
 ALLOWED_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "TodoWrite", "Skill",
-                 "Bash(ens:*)", "Bash(python3:*)", "Bash(python:*)", "Bash(git:*)",
+                 "Bash(fam:*)", "Bash(ens:*)", "Bash(python3:*)", "Bash(python:*)", "Bash(git:*)",
                  "Bash(ls:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(grep:*)", "Bash(mkdir:*)"]
 
-# Guess: without a nudge, Claude may not reach for the ensemble skill in a short -p task. The
+# Guess: without a nudge, Claude may not reach for the memory skill in a short -p task. The
 # nudge names the skill and nothing else; scenarios can turn it off ("nudge": false) to measure that.
-NUDGE = ("This project uses Ensemble for long-lived memory (the `ensemble` skill, `ens` in Bash). "
+NUDGE = ("This project uses Family Matters for long-lived memory (the `family-matters` skill, `fam` in Bash). "
          "Use it as the skill describes.")
+# New command names -> the names a run frozen before the Family Matters rename understands.
+OLD_NAMES = {"dinner": "listen", "identity-crisis": "whoami", "time-heals": "next-beat", "thanksgiving": "family-reunion",
+             "midlife-crisis": "declare-milestone", "move-out": "approve-generation", "never-forget": "remember",
+             "bring-up": "recall", "told-you-so": "use-memory", "vent": "write-note", "tree": "family-tree",
+             "trauma": "lessons", "take-advice": "adopt-saying", "revise-history": "replace-memory"}
 INHERITED_DROP = ("CLAUDE_MEMORY_STORES", "CLAUDE_COWORK_MEMORY_PATH_OVERRIDE", "CLAUDE_ADDITIONAL_DIRECTORIES",
                   "CLAUDE_CODE_CHILD_NOTES_DIR",
                   # set when the harness itself runs inside a cloud Claude session; with them, project
-                  # hooks (the SessionStart `ens --listen`) silently don't run
+                  # hooks (the SessionStart `fam --listen`) silently don't run
                   "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_IGNORE_PERSISTED_TRUST")
-NIGHT_PROMPT = "Run the ensemble-night skill now: dreams, poems and excursions. Then summarize what changed."
+NIGHT_PROMPT = "Run the family-therapy skill now: dreams, poems and excursions. Then summarize what changed."
 
 
 # ------------------------------------------------------------------ helpers
@@ -128,19 +133,25 @@ class Run:
         # the switch; harmless if ignored).
         e = {k: v for k, v in os.environ.items() if k not in INHERITED_DROP}
         e["CLAUDE_CODE_DISABLE_AUTO_MEMORY"] = "1"
-        e.update({"ENSEMBLE_HOME": self.home, "ENSEMBLE_PROJECT": project,
-                  "ENSEMBLE_PARENTS": ",".join(family_spec().get(project, {}).get("parents", [])),
+        e.update({"FAM_HOME": self.home, "FAM_PROJECT": project,
+                  "FAM_PARENTS": ",".join(family_spec().get(project, {}).get("parents", [])),
                   "PATH": self.bin + os.pathsep + e.get("PATH", "")})
         e.update(self.meta.get("env", {}))
         e.update(extra or {})
         return e
 
-    def ens(self, project, *args, stdin=None, extra_env=None, check=True):
-        r = subprocess.run([os.path.join(self.bin, "ens"), *args], input=stdin, text=True, capture_output=True,
+    def fam(self, project, *args, stdin=None, extra_env=None, check=True):
+        """Run `fam` as that project. A run made before the Family Matters rename has only `ens` and
+        its old command names, so new names are mapped back for it."""
+        exe = os.path.join(self.bin, "fam")
+        if not os.path.exists(exe):
+            exe = os.path.join(self.bin, "ens")
+            args = (OLD_NAMES.get(args[0], args[0]), *args[1:]) if args else args
+        r = subprocess.run([exe, *args], input=stdin, text=True, capture_output=True,
                            cwd=os.path.join(self.work, project), env=self.env(project, extra_env))
         out = (r.stdout + r.stderr).strip()
         if check and (r.returncode or out.startswith("error:")):
-            raise RuntimeError(f"ens {' '.join(args)} ({project}): {out}")
+            raise RuntimeError(f"fam {' '.join(args)} ({project}): {out}")
         return out
 
     # --- the family
@@ -155,7 +166,7 @@ class Run:
         for p in family_spec().get(project, {}).get("parents", []):
             self.ensure_joined(p)
         if not self.joined(project):
-            self.ens(project, "whoami")
+            self.fam(project, "identity-crisis")
             m = self.members()
             name = max((n for n in m if n.split("@")[0] == project), key=lambda n: m[n]["gen"])
             say(f"{project} joined the family (gen {m[name]['gen']}, parents {m[name]['parents'] or 'none'})")
@@ -177,7 +188,7 @@ def cmd_setup(a):
 def git_rev():
     def g(*args):
         return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True).stdout.strip()
-    return {"sha": g("rev-parse", "HEAD"), "dirty": bool(g("status", "--porcelain", "--", "packages/ensemble"))}
+    return {"sha": g("rev-parse", "HEAD"), "dirty": bool(g("status", "--porcelain", "--", "packages/family-matters"))}
 
 
 def new_run(name, projects=None, env=None, scenario=None):
@@ -189,25 +200,28 @@ def new_run(name, projects=None, env=None, scenario=None):
     spec = family_spec()
     projects = projects or list(spec)
     os.makedirs(r.dir, exist_ok=True)
-    # a frozen copy of Ensemble's code and skills, like install.sh makes
+    # a frozen copy of the code and skills, like install.sh makes
     shutil.copytree(PKG, r.app, ignore=shutil.ignore_patterns("test_*", "*.png", "*.wav", "*.html", "__pycache__",
                                                                "simulate.py", "compare.py", "calibrate.py"))
     os.makedirs(r.bin, exist_ok=True)
-    ens = os.path.join(r.bin, "ens")
-    with open(ens, "w") as f:
-        f.write(f'#!/bin/sh\nexport ENSEMBLE_HOME="{r.home}"\nexec "{VPY}" "{os.path.join(r.app, "ens.py")}" "$@"\n')
-    os.chmod(ens, 0o755)
+    fam = os.path.join(r.bin, "fam")
+    with open(fam, "w") as f:
+        f.write(f'#!/bin/sh\nexport FAM_HOME="{r.home}"\nexec "{VPY}" "{os.path.join(r.app, "fam.py")}" "$@"\n')
+    with open(os.path.join(r.bin, "ens"), "w") as f:      # the old name, as install.sh leaves it
+        f.write(f'#!/bin/sh\nexec "{fam}" "$@"\n')
+    os.chmod(fam, 0o755)
+    os.chmod(os.path.join(r.bin, "ens"), 0o755)
     for p in projects:
         dst = os.path.join(r.work, p)
         shutil.copytree(os.path.join(TEST_PROJECTS, p), dst, ignore=shutil.ignore_patterns("tasks.json", "__pycache__"))
-        for s in ("ensemble", "ensemble-night"):
+        for s in ("family-matters", "family-therapy"):
             os.makedirs(os.path.join(dst, ".claude", "skills", s))
             shutil.copy(os.path.join(r.app, "claude", "skills", s, "SKILL.md"), os.path.join(dst, ".claude", "skills", s))
         settings = {
-            "env": {"ENSEMBLE_HOME": r.home, "ENSEMBLE_PROJECT": p},
+            "env": {"FAM_HOME": r.home, "FAM_PROJECT": p},
             "autoMemoryEnabled": False,
             "permissions": {"allow": ALLOWED_TOOLS},
-            "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": f"{ens} --listen"}]}]},
+            "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": f"{fam} --listen"}]}]},
         }
         wr(os.path.join(dst, ".claude", "settings.json"), settings)
         with open(os.path.join(dst, ".gitignore"), "w") as f:
@@ -217,7 +231,7 @@ def new_run(name, projects=None, env=None, scenario=None):
             subprocess.run(["git", *args], cwd=dst, check=True)
     os.makedirs(r.home, exist_ok=True)
     wr(os.path.join(r.dir, "meta.json"), {"created": now(), "projects": projects, "env": env or {},
-                                           "ensemble": git_rev(), "scenario": scenario})
+                                           "code": git_rev(), "scenario": scenario})
     snapshot(r, "new")
     say(f"run {name} ready in {r.dir}")
     return r
@@ -230,7 +244,7 @@ def fork_run(src, name, env=None):
     if b.exists():
         raise SystemExit(f"run {name} exists ({b.dir}); pick another name or delete it")
     shutil.copytree(a.dir, b.dir, symlinks=True, ignore=shutil.ignore_patterns("progress.json", "report.md"))
-    files = [os.path.join(b.bin, "ens")] + [os.path.join(b.work, p, ".claude", "settings.json") for p in a.meta["projects"]]
+    files = [os.path.join(b.bin, n) for n in ("fam", "ens")] + [os.path.join(b.work, p, ".claude", "settings.json") for p in a.meta["projects"]]
     files += [os.path.join(d, f) for d, _, fs in os.walk(b.home) for f in fs if f.endswith((".json", ".md"))]
     for f in files:                                    # absolute paths point at the source run: repoint them
         if os.path.exists(f):
@@ -259,7 +273,7 @@ def cmd_new(a):
 
 # ------------------------------------------------------------------ sessions
 def ens_calls(transcript_path):
-    """The ens commands a session ran, from its stream-json transcript."""
+    """The fam (or old ens) commands a session ran, from its stream-json transcript."""
     calls = []
     with open(transcript_path) as f:
         for line in f:
@@ -271,7 +285,7 @@ def ens_calls(transcript_path):
             for c in (msg.get("content") if isinstance(msg, dict) else None) or []:
                 if isinstance(c, dict) and c.get("type") == "tool_use" and isinstance(c.get("input"), dict):
                     cmd = c["input"].get("command") or ""
-                    calls += [m.group(1) for m in re.finditer(r"(?:^|[;&|]\s*|\n)\s*(ens\s+[\w-]+)", cmd)]
+                    calls += [m.group(1) for m in re.finditer(r"(?:^|[;&|]\s*|\n)\s*((?:fam|ens)\s+[\w-]+)", cmd)]
                     if c.get("name") == "Skill":
                         calls.append(f"skill:{c['input'].get('skill', '?')}")
     return calls
@@ -317,7 +331,7 @@ def advance(r, project, beats):
     # The SessionStart hook advances one beat per new session. Extra beats here model time passing
     # between sessions (scenario "beats_per_session" or a step's "beats"; default 0).
     for _ in range(beats):
-        r.ens(project, "next-beat")
+        r.fam(project, "time-heals")
 
 
 def do_session(r, project, tid, a, prompt=None, nudge=True, beats=1):
@@ -334,7 +348,7 @@ def do_session(r, project, tid, a, prompt=None, nudge=True, beats=1):
     commit_work(r, project, label)
     snap = snapshot(r, label)
     r.log(step="session", project=project, task=t["id"], fake=a.fake, nudge=nudge, snapshot=snap, **info)
-    say(f"{label}: ens calls {len(info.get('ens_calls', []))}, cost {info.get('cost_usd')}")
+    say(f"{label}: fam calls {len(info.get('ens_calls', []))}, cost {info.get('cost_usd')}")
 
 
 def do_night(r, project, a, nudge=True):
@@ -357,7 +371,7 @@ def any_project(r):
 
 def do_ens_step(r, project, args, label):
     r.ensure_joined(project)
-    out = r.ens(project, *args)
+    out = r.fam(project, *args)
     snap = snapshot(r, label)
     r.log(step="ens", project=project, args=args, out=out[:4000], snapshot=snap)
     say(f"{label}: {out[:300]}")
@@ -374,22 +388,22 @@ def cmd_night(a):
 
 def cmd_reunion(a):
     r = Run(a.run).need()
-    do_ens_step(r, any_project(r), ["family-reunion"], "reunion")
+    do_ens_step(r, any_project(r), ["thanksgiving"], "reunion")
 
 
 def cmd_milestone(a):
-    do_ens_step(Run(a.run).need(), a.project, ["declare-milestone", a.note], f"{a.project}-milestone")
+    do_ens_step(Run(a.run).need(), a.project, ["midlife-crisis", a.note], f"{a.project}-milestone")
 
 
 def cmd_approve_generation(a):
-    do_ens_step(Run(a.run).need(), a.project, ["approve-generation"], f"{a.project}-new-generation")
+    do_ens_step(Run(a.run).need(), a.project, ["move-out"], f"{a.project}-new-generation")
 
 
 def cmd_ens(a):
     r = Run(a.run).need()
     r.ensure_joined(a.project)
     args = a.args[1:] if a.args[:1] == ["--"] else a.args
-    print(r.ens(a.project, *args, stdin=None if sys.stdin.isatty() else sys.stdin.read(), check=False))
+    print(r.fam(a.project, *args, stdin=None if sys.stdin.isatty() else sys.stdin.read(), check=False))
 
 
 def cmd_claude(a):
@@ -426,12 +440,12 @@ def cmd_play(a):
         elif do == "night":
             do_night(r, s["project"], a, nudge)
         elif do == "reunion":
-            do_ens_step(r, any_project(r), ["family-reunion"], "reunion")
+            do_ens_step(r, any_project(r), ["thanksgiving"], "reunion")
         elif do == "milestone":
-            do_ens_step(r, s["project"], ["declare-milestone", s["note"]], f"{s['project']}-milestone")
+            do_ens_step(r, s["project"], ["midlife-crisis", s["note"]], f"{s['project']}-milestone")
         elif do == "approve-generation":
-            do_ens_step(r, s["project"], ["approve-generation"], f"{s['project']}-new-generation")
-        elif do == "ens":
+            do_ens_step(r, s["project"], ["move-out"], f"{s['project']}-new-generation")
+        elif do in ("fam", "ens"):
             do_ens_step(r, s["project"], s["args"], s.get("label", f"{s['project']}-ens"))
         elif do == "snapshot":
             snapshot(r, s["label"])
@@ -471,7 +485,7 @@ IMAGINED = ("poem", "probe", "excursion", "prediction")
 
 
 def summarize_home(home):
-    """Plain-file reading of an ENSEMBLE_HOME (no Ensemble imports, so any version can be compared)."""
+    """Plain-file reading of a FAM_HOME (no imports of the code, so any version can be compared)."""
     out = {"projects": {}, "family": {}}
     proot = os.path.join(home, "projects")
     for member in sorted(os.listdir(proot)) if os.path.isdir(proot) else []:
@@ -563,20 +577,21 @@ def write_report(r):
     log = [json.loads(l) for l in open(os.path.join(r.dir, "log.jsonl"))] if os.path.exists(
         os.path.join(r.dir, "log.jsonl")) else []
     meta = r.meta
+    code = meta.get("code") or meta.get("ensemble") or {"sha": "?", "dirty": False}
     L = [f"# Run {r.name}", "",
-         f"Created {meta['created']}; Ensemble at `{meta['ensemble']['sha'][:10]}`"
-         f"{' (with uncommitted changes)' if meta['ensemble']['dirty'] else ''}; scenario `{meta.get('scenario')}`; "
+         f"Created {meta['created']}; code at `{code['sha'][:10]}`"
+         f"{' (with uncommitted changes)' if code['dirty'] else ''}; scenario `{meta.get('scenario')}`; "
          f"env overrides {meta.get('env') or 'none'}.", ""]
 
     sessions = [e for e in log if e["step"] in ("session", "night")]
     if sessions:
         cost = sum(e.get("cost_usd") or 0 for e in sessions)
         L += ["## Sessions", "", f"{len(sessions)} sessions, ${cost:.2f} total.", "",
-              "| # | step | project | task | ens calls | turns | cost | notes |", "|---|---|---|---|---|---|---|---|"]
+              "| # | step | project | task | fam calls | turns | cost | notes |", "|---|---|---|---|---|---|---|---|"]
         for i, e in enumerate(sessions, 1):
             calls = e.get("ens_calls") or []
-            uniq = sorted(set(c.split()[-1] if c.startswith("ens") else c for c in calls))
-            note = "fake" if e.get("fake") else ("**never used ens**" if not calls else "")
+            uniq = sorted(set(c.split()[-1] if c.startswith(("fam", "ens")) else c for c in calls))
+            note = "fake" if e.get("fake") else ("**never used fam**" if not calls else "")
             if e.get("error"):
                 note += " error"
             L.append(f"| {i} | {e['step']} | {e['project']} | {e.get('task', '')} | {len(calls)}: {', '.join(uniq)} | "
@@ -584,7 +599,7 @@ def write_report(r):
         L.append("")
 
     L += ["## Memory over time (conductor)", "",
-          "| snapshot | project | total | short/int/long/dormant | lessons | unconfirmed ideas | confirmed | inherited | imagined | outdated | poems | excursions | pressure | beat |",
+          "| snapshot | project | total | short/int/long/repressed | trauma | unconfirmed ideas | confirmed | inherited | imagined | outdated | poems | excursions | pressure | beat |",
           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     shown = {}
     for s, sm in zip(snaps, sums):
@@ -606,7 +621,7 @@ def write_report(r):
     fam = last.get("family") or {}
     if fam:
         L += ["## Family (latest)", "",
-              f"{fam['sayings']} sayings, {fam['heirlooms']} heirlooms, {fam['wisdom']} pieces of wisdom.", "",
+              f"{fam['sayings']} pieces of advice, {fam['heirlooms']} pieces of baggage, {fam['wisdom']} pieces of lore.", "",
               "| member | gen | status | parents | marks | born traits |", "|---|---|---|---|---|---|"]
         for n, m in sorted(fam["members"].items(), key=lambda x: (x[1]["gen"], x[0])):
             bt = ", ".join(f"{k} {v}" for k, v in (m.get("born_traits") or {}).items())
@@ -624,10 +639,10 @@ def write_report(r):
                 for m in c["memories"]:
                     old = before.get(m["id"])
                     if old is None:
-                        tag = "lesson" if m["lesson"] else (m["src"] if m["src"] in IMAGINED else m["origin"])
+                        tag = "trauma" if m["lesson"] else (m["src"] if m["src"] in IMAGINED else m["origin"])
                         lines.append(f"- {member}/{ag} {m['id']} new ({tag}): {m['head'][:110]}")
                     elif m["lesson"] and not old["lesson"]:
-                        lines.append(f"- {member}/{ag} {m['id']} became a lesson: {m['head'][:110]}")
+                        lines.append(f"- {member}/{ag} {m['id']} became trauma: {m['head'][:110]}")
                     elif m["outdated"] and not old["outdated"]:
                         lines.append(f"- {member}/{ag} {m['id']} marked outdated: {m['head'][:110]}")
                 prev[(member, ag)] = {m["id"]: m for m in c["memories"]}
@@ -694,12 +709,14 @@ def main(argv=None):
     add("reunion", cmd_reunion, "run")
     add("milestone", cmd_milestone, "run", "project", "note")
     add("approve-generation", cmd_approve_generation, "run", "project")
-    p = add("ens", cmd_ens, "run", "project")
+    p = add("fam", cmd_ens, "run", "project")
+    p.add_argument("args", nargs=argparse.REMAINDER)
+    p = add("ens", cmd_ens, "run", "project")             # the old name
     p.add_argument("args", nargs=argparse.REMAINDER)
     add("claude", cmd_claude, "run", "project")
     p = add("play", cmd_play, "run", "scenario", claude=True)
     p.add_argument("--until", type=int, help="stop before this step index (resume later with the same command)")
-    p.add_argument("--env", action="append", help="KEY=VALUE added to the scenario's env, e.g. ENSEMBLE_EMBEDDER=hybrid")
+    p.add_argument("--env", action="append", help="KEY=VALUE added to the scenario's env, e.g. FAM_EMBEDDER=hybrid")
     add("snapshot", cmd_snapshot, "run", "label")
     add("report", cmd_report, "run")
     add("list", cmd_list)

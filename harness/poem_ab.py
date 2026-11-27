@@ -3,8 +3,8 @@
 
 Two arms start from the identical memory and code state and each runs one real night per project:
 
-    control  ENSEMBLE_WEAVE=0 ENSEMBLE_POEM_LENS=0: the night before weaving (dreams, one-line poems, excursions)
-    poems    ENSEMBLE_WEAVE=1 ENSEMBLE_POEM_LENS=1: first weave earlier one-line figures into one longer poem,
+    control  FAM_WEAVE=0 FAM_POEM_LENS=0: the night before weaving (dreams, one-line poems, excursions)
+    poems    FAM_WEAVE=1 FAM_POEM_LENS=1: first weave earlier one-line figures into one longer poem,
              then dreams, poems and excursions each see that poem as a lens
 
     python3 harness/poem_ab.py base   pab1     sessions, a first night (makes figures), more sessions
@@ -40,9 +40,9 @@ import lab  # noqa: E402
 
 PROJECTS = ["recipe-core", "pantry-tracker", "grocery-bot"]
 BEFORE, BETWEEN = 3, 1                     # sessions before the first night, and between the nights
-ARMS = {"control": {"ENSEMBLE_WEAVE": "0", "ENSEMBLE_POEM_LENS": "0"},
-        "poems": {"ENSEMBLE_WEAVE": "1", "ENSEMBLE_POEM_LENS": "1"}}
-BASE_ENV = {"ENSEMBLE_WEAVE": "0", "ENSEMBLE_POEM_LENS": "0", "ENSEMBLE_EXCURSIONS": "3"}
+ARMS = {"control": {"FAM_WEAVE": "0", "FAM_POEM_LENS": "0"},
+        "poems": {"FAM_WEAVE": "1", "FAM_POEM_LENS": "1"}}
+BASE_ENV = {"FAM_WEAVE": "0", "FAM_POEM_LENS": "0", "FAM_EXCURSIONS": "3"}
 JUDGE_TOOLS = ["Read", "Glob", "Grep", "Write", "Bash(python3:*)", "Bash(python:*)", "Bash(ls:*)", "Bash(cat:*)"]
 
 
@@ -107,9 +107,9 @@ def cmd_arms(a):
     for arm, env in ARMS.items():
         r = arm_run(a, arm)
         if not r.exists():
-            env = dict(env, **({"ENSEMBLE_NIGHT_SEED": str(a.night_seed)} if a.night_seed is not None else {}))
+            env = dict(env, **({"FAM_NIGHT_SEED": str(a.night_seed)} if a.night_seed is not None else {}))
             r = lab.fork_run(base.name, r.name, env)
-            # both arms run today's Ensemble code (the base may have been made with an older copy)
+            # both arms run today's code (the base may have been made with an older copy)
             shutil.copytree(lab.PKG, r.app, dirs_exist_ok=True, ignore=shutil.ignore_patterns(
                 "test_*", "*.png", "*.wav", "*.html", "__pycache__", "simulate.py", "compare.py", "calibrate.py"))
         runs[arm] = r
@@ -163,7 +163,7 @@ def answers(transcript):
         for c in (msg.get("content") if isinstance(msg, dict) else None) or []:
             if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name") == "Write":
                 inp = c.get("input") or {}
-                if str(inp.get("file_path", "")).endswith(".ensemble-answer.json"):
+                if str(inp.get("file_path", "")).endswith((".fam-answer.json", ".ensemble-answer.json")):
                     try:
                         out.append(json.loads(inp.get("content") or ""))
                     except ValueError:
@@ -291,7 +291,7 @@ def cmd_judge(a):
         jdir = os.path.join(od, "judge-work", p)
         if not os.path.exists(jdir):
             shutil.copytree(os.path.join(lab.Run(f"{a.name}-base").work, p), jdir,
-                            ignore=shutil.ignore_patterns(".claude", ".git", ".ensemble*"))
+                            ignore=shutil.ignore_patterns(".claude", ".git", ".fam-*", ".ensemble*"))
         out = os.path.join(jdir, ".judge.json")
         prompt = JUDGE.format(memories="\n".join(f"- {t}" for t in before.values() if t),
                               items="\n".join(render(it["id"], it) for it in pool), out=out)
@@ -439,7 +439,7 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--max-turns", type=int, default=80)
     ap.add_argument("--tag", default="", help="suffix for a second pair of arms from the same base, e.g. 2")
-    ap.add_argument("--night-seed", type=int, help="ENSEMBLE_NIGHT_SEED for both arms: identical pairs and seeds")
+    ap.add_argument("--night-seed", type=int, help="FAM_NIGHT_SEED for both arms: identical pairs and seeds")
     ap.add_argument("--fake", action="store_true", help="offline stand-in for the sessions and nights (tests the plumbing)")
     a = ap.parse_args(argv)
     a.projects = a.projects.split(",")

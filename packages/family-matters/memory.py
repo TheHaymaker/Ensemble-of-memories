@@ -469,7 +469,7 @@ class MemoryStore:
         shown = known[: self.k - n_ideas] + ideas[:n_ideas]
         n_night = len(ideas) + len(imagined)
         lines = [f"beat {now} | {len(known)} active, " + (f"{n_night} ideas from nights, " if n_night else "")
-                 + f"{n_dormant} dormant, {n_lessons} lessons | strongest {len(shown)}:"]
+                 + f"{n_dormant} repressed, {n_lessons} trauma | strongest {len(shown)}:"]
         for s, mid, m in shown:
             tag = " (idea, unconfirmed)" if m.get("origin") == "dream" else ""
             lines.append(f"{mid} {TIER[m['c']][:5]} {s:.2f}{tag}: {m['head'][:80]}")
@@ -479,7 +479,7 @@ class MemoryStore:
         self._atomic(os.path.join(self.root, "summary.md"), self._summary_text(idx) + "\n")
         ls = [(k, m) for k, m in idx["m"].items() if m.get("lesson")]
         self._atomic(os.path.join(self.root, "lessons.md"),
-                     "# Lessons\n\n" + "".join(f"- {k}: {m['head']} (used {m['uses']} times)\n" for k, m in ls))
+                     "# Trauma (lessons that never fade)\n\n" + "".join(f"- {k}: {m['head']} (used {m['uses']} times)\n" for k, m in ls))
 
     def summary(self):
         with open(os.path.join(self.root, "summary.md")) as f:

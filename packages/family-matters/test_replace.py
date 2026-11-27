@@ -84,7 +84,7 @@ def test_remember_points_out_a_close_memory_to_replace_later():
     p.memory.remember("pinch is a count unit and never converts", 0.5)
     out = p.remember("the staging database password now rotates weekly", 0.6)
     new = out.split()[1].rstrip(".")
-    assert f"Close to: {old}" in out and f"ens replace-memory OLD_ID {new}" in out and "pinch" not in out, out
+    assert f"Close to: {old}" in out and f"fam revise-history OLD_ID {new}" in out and "pinch" not in out, out
     assert p.replace_memory(old, new) == f"{old} is now replaced by {new}"
     assert p.replace_memory(new, old).startswith("error")            # no cycles
     return "a new memory close to an old one asks whether it overturns it; replace-memory does it after the fact"
@@ -143,18 +143,18 @@ def test_a_saying_told_before_the_overturn_stops_being_heard():
     return "once the parent replaces it, the old saying leaves the child's briefing, recall and later births"
 
 
-def test_the_ens_command_takes_replaces():
+def test_the_fam_command_takes_replaces():
     import subprocess
     import sys
     h = tempfile.mkdtemp()
-    env = dict(os.environ, ENSEMBLE_HOME=h, ENSEMBLE_PROJECT="proj", PYTHONWARNINGS="ignore")
-    ens = [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "ens.py")]
+    env = dict(os.environ, FAM_HOME=h, FAM_PROJECT="proj", PYTHONWARNINGS="ignore")
+    ens = [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "fam.py")]
     run = lambda *a: subprocess.run(ens + list(a), capture_output=True, text=True, env=env, timeout=60).stdout.strip()
-    assert run("remember", OLD) == "stored m00001"
-    assert run("remember", NEW, "--replaces", "m00001") == "stored m00002, replacing m00001"
-    assert "m00001" not in run("listen") and "--replaces" in run("remember", "--help")
-    assert run("replace-memory", "m00002", "m00001").startswith("error")
-    return "ens remember --replaces and ens replace-memory work from the command line"
+    assert run("never-forget", OLD) == "stored m00001"
+    assert run("never-forget", NEW, "--replaces", "m00001") == "stored m00002, replacing m00001"
+    assert "m00001" not in run("dinner") and "--replaces" in run("never-forget", "--help")
+    assert run("revise-history", "m00002", "m00001").startswith("error")
+    return "fam never-forget --replaces and fam revise-history work from the command line"
 
 
 if __name__ == "__main__":

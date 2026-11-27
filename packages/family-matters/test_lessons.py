@@ -61,7 +61,7 @@ def test_memories_harden_into_lessons_that_do_not_fade():
     s.beat(1000)
     row = next(r for r in s.rows() if r["id"] == mid)
     assert row["tier"] == "lesson" and row["strength"] == 1.0
-    assert "lessons" in s.summary().splitlines()[0] and os.path.exists(os.path.join(s.root, "lessons.md"))
+    assert " trauma | " in s.summary().splitlines()[0] and os.path.exists(os.path.join(s.root, "lessons.md"))
     return (f"8 spaced uses + a dream reinforcement + 3 nights in long-term -> lesson; 1000 beats later "
             f"still at strength {row['strength']}; listed in lessons.md")
 
@@ -97,8 +97,8 @@ def test_lessons_surface_before_anyone_asks():
     before = cond.listen()
     cond.open_question("change-preprod-creds-schedule", text="Should we change how often the preprod DB credentials rotate?")
     after = cond.listen()
-    assert "lesson " not in before and f"lesson {lesson}" in after
-    line = next(l for l in after.splitlines() if l.startswith("lesson "))
+    assert "trauma " not in before and f"trauma {lesson}" in after
+    line = next(l for l in after.splitlines() if l.startswith("trauma "))
     return f"no lesson shown until a related question opened; then listen() offered: '{line}'"
 
 

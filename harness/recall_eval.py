@@ -2,10 +2,10 @@
 """How well does recall find what real sessions were looking for?
 
     .lab/venv/bin/python harness/recall_eval.py [harness/data/recall-saga1.json]
-    ENSEMBLE_EMBEDDER=hybrid .lab/venv/bin/python harness/recall_eval.py      (needs model2vec)
+    FAM_EMBEDDER=hybrid .lab/venv/bin/python harness/recall_eval.py      (needs model2vec)
 
-Each query is a cue Claude actually sent to `ens recall` in a run, with the memories that existed then
-and, labelled by hand, the ones that answer it. Rebuilds each store with the current Ensemble code and
+Each query is a cue Claude actually sent to `ens recall` (now `fam bring-up`) in a run, with the memories that existed then
+and, labelled by hand, the ones that answer it. Rebuilds each store with the current code and
 reports: answerable cues where a right memory came back, where it came back first, and wrong memories
 returned (counting weak matches)."""
 import json
@@ -14,12 +14,12 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), "packages", "ensemble"))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "packages", "family-matters"))
 from memory import MemoryStore  # noqa: E402
 
 
 def make_embedder():
-    kind = os.environ.get("ENSEMBLE_EMBEDDER", "keywords")
+    kind = os.environ.get("FAM_EMBEDDER") or os.environ.get("ENSEMBLE_EMBEDDER", "keywords")
     if kind == "keywords":
         return None
     import embeddings as E
