@@ -38,7 +38,7 @@ def test_a_night_through_the_cli():
     report = run(["dream-apply"], h, stdin=json.dumps([{"a": "m00001", "b": "m00002", "op": "substitute", "score": 0.9,
                                                        "keep": "m00002", "insight": "Moved to weekly."}]))
     outdated = run(["recall", "how often does the staging password rotate", "--strength", "0.6"], h)
-    assert "1 substitute" in report and "OUTDATED: see m00002" in outdated
+    assert "1 substitute" in report and "m00002 [" in outdated and "m00001 [" not in outdated, outdated
     pp = json.loads(run(["poem-pairs"], h))["pairs"]
     a, b = pp[0]["A"]["id"], pp[0]["B"]["id"]
     poem = run(["poem-apply"], h, stdin=json.dumps([{"A": a, "B": b, "figures": [{"text": "x", "p": 0.3}, {"text": "y", "p": 0.01}],

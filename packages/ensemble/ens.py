@@ -229,9 +229,16 @@ def next_beat() -> str:
 
 
 @tool
-def remember(text: str, importance: float = 0.5, agent: str = "conductor") -> str:
-    """Store something worth remembering (importance 0-1)."""
-    return _safe(lambda: player(agent).remember(text, importance))
+def remember(text: str, importance: float = 0.5, replaces: str = "", agent: str = "conductor") -> str:
+    """Store something worth remembering (importance 0-1). If it overturns an earlier memory, pass
+    --replaces m00003: the old one is marked replaced and no longer shown or handed down."""
+    return _safe(lambda: player(agent).remember(text, importance, replaces))
+
+
+@tool
+def replace_memory(old_id: str, new_id: str, agent: str = "conductor") -> str:
+    """Mark old_id as overturned by new_id (both already stored): a decision changed or a fact went stale."""
+    return _safe(lambda: player(agent).replace_memory(old_id, new_id))
 
 
 @tool
@@ -464,7 +471,8 @@ def serve_mcp():
         from mcp.server.fastmcp import FastMCP as Server
     server = Server("ensemble", instructions=(
         "Shared memory and coordination for this project. Call listen first in a task. Remember what "
-        "is worth keeping; use_memory when you rely on something; vote on open questions. When listen "
+        "is worth keeping (with replaces=<old id> when it overturns an earlier memory); use_memory when you "
+        "rely on something; vote on open questions. When listen "
         "says sleep is due, run the /ensemble-night skill."))
     for fn in COMMANDS.values():
         server.tool()(fn)
@@ -474,7 +482,8 @@ def serve_mcp():
 USAGE = """ens: shared memory and coordination for this project (Ensemble)
 
   ens listen                                start here: beat, questions, memories, lessons, family advice
-  ens remember "text" [--importance 0.7]    ens recall "cue" [--strength 0.9]     ens use-memory m00012
+  ens remember "text" [--importance 0.7] [--replaces m00003]   ens replace-memory m00003 m00009
+  ens recall "cue" [--strength 0.9]         ens use-memory m00012
   ens write-note "text"   ens read-part builder   ens vote q yes 0.8   ens lessons
   ens open-question q --text "what is being decided"   ens close-question q   ens next-beat
   ens dream-pairs | ens dream-apply --file .ensemble-answer.json      (night: Claude judges)
