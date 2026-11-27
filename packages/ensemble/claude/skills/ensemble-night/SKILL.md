@@ -7,7 +7,12 @@ allowed-tools: Bash(ens *)
 # A night
 
 You are the sleeping, dreaming and playing mind of this project. Three steps; each prints JSON,
-and you answer with JSON on stdin. Add `--agent NAME` throughout to run a subagent's night.
+and you answer with JSON in a file. Add `--agent NAME` throughout to run a subagent's night.
+
+**How to answer:** write the JSON with your Write tool to `.ensemble-answer.json` in the project
+folder, then run the apply command with `--file .ensemble-answer.json`. Ensemble deletes that file
+once it has applied it. Don't put JSON on the command line or in a heredoc: Claude Code's shell
+check refuses quoted braces in commands. `ens <command> --help` explains any step.
 
 ## 1. Dreams (sense-making)
 
@@ -24,11 +29,13 @@ mean nothing: answer `none`. Otherwise:
 Prefer `qualify` or `tension` to discarding a lesson that may still be valuable. Imagined memories
 can only be linked or reinforced. Then:
 
-```bash
-ens dream-apply <<'JSON'
+`.ensemble-answer.json`:
+
+```json
 [{"a":"m00001","b":"m00003","op":"substitute","score":0.9,"keep":"m00003","insight":"Staging creds moved from monthly to weekly rotation."}]
-JSON
 ```
+
+then `ens dream-apply --file .ensemble-answer.json`.
 
 ## 2. Poems (not sense-making)
 
@@ -38,12 +45,14 @@ of your own distribution, each with your honest probability `p` of having writte
 its memory: strange but exact. Glosses are the opposite: maximum precision. Probes ask where a
 memory stops being true. Add a short verse.
 
-```bash
-ens poem-apply <<'JSON'
+`.ensemble-answer.json`:
+
+```json
 [{"A":"m00002","B":"m00003","figures":[{"text":"...","p":0.03}],"aliases":{"A":[{"text":"...","p":0.02}],"B":[]},
   "glosses":{"A":"...","B":"..."},"probes":{"A":null,"B":null},"verse":"..."}]
-JSON
 ```
+
+then `ens poem-apply --file .ensemble-answer.json`.
 
 ## 3. Excursions (curiosity)
 
@@ -53,12 +62,14 @@ If a harmless experiment can actually run (a throwaway script in a temp folder, 
 the project, the network or anything destructive), you may run it and report what happened in
 `ran`. A hypothesis should carry a concrete `prediction` that a later real event could confirm.
 
-```bash
-ens excursion-apply <<'JSON'
+`.ensemble-answer.json`:
+
+```json
 [{"seed":"<exactly as given>","form":"hypothesis","title":"...","outcome":"...","surprise":"...",
   "verdict":"silly","prediction":"...","spawn":["..."]}]
-JSON
 ```
+
+then `ens excursion-apply --file .ensemble-answer.json`.
 
 ## Then
 
