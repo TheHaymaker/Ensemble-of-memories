@@ -20,7 +20,7 @@ Environment:
     ENSEMBLE_PROJECT    project name (default: the working folder's name)
     ENSEMBLE_PARENTS    parent projects, used once when the project first joins the family
     ENSEMBLE_ROSTER     players (default conductor,builder,reviewer,tester)
-    ENSEMBLE_EMBEDDER   keywords (default) | model2vec | gemini | st   (fixed once a store exists)
+    ENSEMBLE_EMBEDDER   keywords (default) | hybrid | model2vec | gemini | st   (fixed once a store exists)
     ENSEMBLE_SLEEP_AT   new memories that make sleep due (default 30)
 
 `ens --listen` prints the conductor's view, never failing: use it as a SessionStart hook. On a new
@@ -59,7 +59,7 @@ def make_embedder():
     if kind == "keywords":
         return None
     import embeddings as E
-    return {"model2vec": E.Model2VecEmbedder, "gemini": E.GeminiEmbedder,
+    return {"model2vec": E.Model2VecEmbedder, "hybrid": E.HybridEmbedder, "gemini": E.GeminiEmbedder,
             "st": E.SentenceTransformerEmbedder}[kind]()
 
 

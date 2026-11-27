@@ -14,6 +14,8 @@ Adapters:
     Model2VecEmbedder         minishlab/potion-base-8M: local, ~30 MB, no GPU, very fast.
     SentenceTransformerEmbedder   e.g. all-MiniLM-L6-v2: local, needs torch.
     SpacyEmbedder             spaCy word vectors, averaged. Weak; a last resort.
+    HybridEmbedder            model2vec vectors, but recall matches keywords first and uses the
+                              model only when no keyword matches (best on real cues; see recall_eval.py).
 """
 import re
 import zlib
@@ -57,6 +59,19 @@ class Model2VecEmbedder:
 
     def encode(self, texts, kind="memory"):
         return _unit(self.m.encode(list(texts)))
+
+
+class HybridEmbedder(Model2VecEmbedder):
+    """Vectors from model2vec for nights and dedupe; recall matches keywords first and falls back
+    to the single best vector match. On 15 labelled cues from real sessions (harness/data/recall-saga1.json)
+    keywords alone found 12, model2vec alone 8 at its default cutoff (12 with 23 wrong hits at 0.4),
+    and this 14: the small model ranks well, but its scores bunch too closely for one cutoff."""
+    hybrid = True
+    fallback_min = 0.3                  # best vector match below this is not shown
+
+    def __init__(self, model="minishlab/potion-base-8M", thresholds=None):
+        super().__init__(model, thresholds)
+        self.name = f"hybrid:{model}"
 
 
 class SentenceTransformerEmbedder:

@@ -158,6 +158,25 @@ def test_recall_finds_what_real_sessions_asked_for():
     return "real cues find their memory; waking memories outrank dream ideas; weak matches aren't counted as uses"
 
 
+def test_hybrid_recall_falls_back_to_the_model():
+    """Hybrid: keywords decide; the embedder's single best match shows only when no keyword matches."""
+    from embeddings import ConceptEmbedder
+
+    class Hybrid(ConceptEmbedder):
+        name, hybrid, fallback_min = "test:hybrid", True, 0.3
+    s = MemoryStore(tempfile.mkdtemp(), Hybrid())
+    creds = s.remember("rotate the staging password every month")
+    prod = s.remember("deploys to production happen on tuesday")
+    s.remember("the canteen serves lunch at noon")
+    hits = s.recall("staging password", 0.5)
+    assert hits[0]["id"] == creds and hits[0]["how"] == "recalled"          # keywords as before
+    hits = s.recall("when do we ship a release", 0.5)                          # no shared word, same concepts
+    assert [h["id"] for h in hits] == [prod] and hits[0]["how"] == "weak"
+    assert s._load()["m"][prod]["uses"] == 0                                    # a guess is not a use
+    assert s.recall("printer jams", 0.5) == []                                  # nothing near enough: nothing shown
+    return "hybrid recall: keywords first, the model's best guess only when keywords find nothing"
+
+
 def test_concurrent_agents():
     s = fresh("conc")
     with mp.Pool(8) as pool:

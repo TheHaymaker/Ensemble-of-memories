@@ -19,7 +19,7 @@ Then, in any project:
 
 **Projects** are named after the folder Claude Code starts in, or `ENSEMBLE_PROJECT`. Start a new project with `ENSEMBLE_PARENTS=other-project` to make it a child of that project. Subagents pass `--agent builder` (or their own name) to act as other players. Generations and kinship are always your call: the skill tells Claude to ask you first.
 
-**Embeddings:** the default is keyword matching, which needs no setup. For meaning-based recall, set `ENSEMBLE_EMBEDDER=model2vec` (local, about 30 MB) or `gemini` before a project's first use, and install that package into `~/.ensemble/venv`. A store keeps the embedder it was created with.
+**Embeddings:** the default is keyword matching, which needs no setup. For meaning-based recall, set `ENSEMBLE_EMBEDDER=hybrid` (keywords first, the local model2vec model's best guess when no keyword matches; about 30 MB), `model2vec` or `gemini` before a project's first use, and install that package into `~/.ensemble/venv`. A store keeps the embedder it was created with. On 15 labelled cues from real sessions, `hybrid` found 14, keywords 12 and model2vec alone 8 (`harness/recall_eval.py`).
 
 
 Shared state for a multi-agent system, held in **one fixed-size WAV file** (196,652 bytes, 2.05 s, 48 kHz mono 16-bit). It holds up to 9 agents and 32 open questions. The file never grows.

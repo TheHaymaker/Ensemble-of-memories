@@ -4,6 +4,7 @@
     python3 harness/lab.py setup                         one-time: a venv with Ensemble's deps (.lab/venv)
     python3 harness/lab.py play saga1 harness/scenarios/family-saga.json     run a whole scenario
     python3 harness/lab.py play smoke harness/scenarios/smoke.json --fake    same, no Claude (offline stand-in)
+    python3 harness/lab.py play saga4 harness/scenarios/family-saga.json --env ENSEMBLE_EMBEDDER=hybrid
     python3 harness/lab.py report saga1                  write runs/saga1/report.md
 
 Step by step:
@@ -378,7 +379,8 @@ def cmd_play(a):
         raise SystemExit(f"no scenario {a.scenario}")
     r = Run(a.run)
     if not r.exists():
-        new_run(a.run, sc.get("projects"), sc.get("env", {}), os.path.relpath(os.path.abspath(a.scenario), REPO))
+        new_run(a.run, sc.get("projects"), {**sc.get("env", {}), **parse_env(a.env)},
+                os.path.relpath(os.path.abspath(a.scenario), REPO))
     prog_path = os.path.join(r.dir, "progress.json")
     prog = rd(prog_path, {"done": []})
     steps = expand(sc["steps"])
@@ -668,6 +670,7 @@ def main(argv=None):
     add("claude", cmd_claude, "run", "project")
     p = add("play", cmd_play, "run", "scenario", claude=True)
     p.add_argument("--until", type=int, help="stop before this step index (resume later with the same command)")
+    p.add_argument("--env", action="append", help="KEY=VALUE added to the scenario's env, e.g. ENSEMBLE_EMBEDDER=hybrid")
     add("snapshot", cmd_snapshot, "run", "label")
     add("report", cmd_report, "run")
     add("list", cmd_list)
