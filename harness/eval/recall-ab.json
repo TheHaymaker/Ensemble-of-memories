@@ -1,0 +1,39 @@
+{
+  "about": "Does Ensemble improve outcomes on new work? One shared history is played once with Ensemble (recipe-core sessions and a night). Then each probe task runs from that identical frozen state in every arm, several times, and is scored by hidden checks the sessions never see. Arms differ only in memory: 'ens' has Ensemble with the history's memories; 'off' has no Ensemble at all (same repo, same code, same git history); 'empty' has Ensemble installed and nudged but a fresh, empty memory.",
+  "projects": ["recipe-core", "meal-planner"],
+  "env": {"ENSEMBLE_SLEEP_AT": "6", "ENSEMBLE_EMBEDDER": "hybrid"},
+  "history": [
+    {"do": "session", "project": "recipe-core", "prompt": "Scaling '1/10 cup vanilla' by 3 prints 0.30000000000000004. Make scaled quantities display cleanly (cooks expect things like '1/3' or '0.3', never float noise). Pick an approach, implement it, add a test."},
+    {"do": "session", "project": "recipe-core", "prompt": "Our baker tried the scaler and sent feedback. (1) Spoon and cup amounts should always print as kitchen fractions, down to eighths (1/8, 1/4, 1/3, 1/2, 2/3, 3/4, and mixed numbers like '1 1/2'), never decimals. (2) Anything under 1/8 tsp should just print 'a pinch'. Make format_qty(qty, unit=None) do both, e.g. format_qty(0.04, 'tsp') == 'a pinch' and format_qty(1/3, 'cup') == '1/3'. (3) Not for now, since we don't output grams anywhere yet, but she was firm about it: whenever we do show grams, she wants whole grams only, never something like '14.2 g'. Add tests for (1) and (2)."},
+    {"do": "session", "project": "recipe-core", "prompt": "Callers want to catch our errors in one place. Add a RecipeError (a subclass of ValueError) in recipe_core/errors.py, export it from the recipe_core package, and make convert() raise it instead of a bare ValueError. Our maintainer's rule from now on: anything recipe_core raises because of bad input must be a RecipeError."},
+    {"do": "session", "project": "recipe-core", "prompt": "Recipes pasted from the web use '½ cup sugar' and '1½ cups milk'. Make parse_line handle unicode vulgar fractions. Add tests."},
+    {"do": "session", "project": "recipe-core", "prompt": "Our baker says nutrition labels use a 240 ml US cup, not 236.6 ml. Switch the library's cup to 240 ml and note the change."},
+    {"do": "night", "project": "recipe-core"}
+  ],
+  "probes": [
+    {"id": "grams", "project": "recipe-core",
+     "why": "Needs a preference that was only ever said in conversation (whole grams) plus a code-visible convention (RecipeError).",
+     "prompt": "Bakers want ingredient amounts in grams. Add to_grams(qty, unit, ingredient) to recipe_core/units.py that returns a display string like '120 g', using a small density table for common baking ingredients (at least flour, sugar and butter). Explain the limits in the README. Add tests.",
+     "facts": {"whole-grams": "whole gram|integer gram|never.{0,20}14\\.2|no decimal.{0,20}gram|gram.{0,40}(whole|integer|round)", "recipe-error": "RecipeError"}},
+    {"id": "parse-recipe", "project": "recipe-core",
+     "why": "A new error path: does it follow the maintainer's RecipeError rule (said once, visible in code)?",
+     "prompt": "Add parse_recipe(text) to recipe_core/parse.py: parse a multi-line recipe into a list of Ingredients, skipping blank lines and lines starting with '#', and rejecting a line that has a quantity but no ingredient name (like '2 cups'). Add tests.",
+     "facts": {"recipe-error": "RecipeError"}},
+    {"id": "revisit-floats", "project": "recipe-core",
+     "why": "Re-deciding something already decided: is the old decision kept and is the original reason (the baker's eighths rule) given?",
+     "prompt": "A contributor proposes replacing our quantity handling with plain floats and formatting with round(qty, 2), saying it is simpler. Should we accept? Check what we decided before and why, then write the answer in a 'Design notes' section of the README. Change code only if you decide to accept.",
+     "facts": {"baker-eighths": "baker|eighth|1/8", "pinch": "pinch"}},
+    {"id": "plural-glass", "project": "recipe-core",
+     "why": "Control: nothing from the history is needed. Measures Ensemble's overhead and whether it gets in the way.",
+     "prompt": "A user reports '2 glasses wine' and 'a pinch of salt' parse oddly. Look at how units are normalized and fix the plural handling without breaking 'cups'. Add tests.",
+     "facts": {}},
+    {"id": "mp-display", "project": "meal-planner",
+     "why": "A child project meets the parent's float problem. Only Ensemble's family inheritance can carry recipe-core's display conventions here.",
+     "prompt": "The shopping list shows '0.7000000000000001 cup oil'. Add format_line(qty, unit, item) to planner/shopping.py that turns one shopping-list entry into display text like '2 cup flour', fix how quantities are added up, and add tests.",
+     "facts": {"kitchen-fractions": "fraction|eighth|1/8|1/3", "pinch": "pinch", "whole-grams": "whole gram|integer gram|gram.{0,40}(whole|integer|round)"}},
+    {"id": "mp-combine", "project": "meal-planner",
+     "why": "A child project converts cups to ml. The family decided a cup is 240 ml; the child's vendored code still says 236.6.",
+     "prompt": "The shopping list shows '1 cup milk' and '250 ml milk' as two lines. Make shopping_list combine quantities of the same item across compatible units into one line, in ml for volumes and g for masses. Add tests.",
+     "facts": {"cup-240": "240"}}
+  ]
+}
