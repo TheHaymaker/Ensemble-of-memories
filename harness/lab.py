@@ -205,6 +205,8 @@ def new_run(name, projects=None, env=None, scenario=None):
             "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": f"{ens} --listen"}]}]},
         }
         wr(os.path.join(dst, ".claude", "settings.json"), settings)
+        with open(os.path.join(dst, ".gitignore"), "w") as f:
+            f.write("__pycache__/\n*.pyc\n")
         for args in (["init", "-q"], ["add", "-A"], ["-c", "user.name=lab", "-c", "user.email=lab@localhost",
                                                      "commit", "-qm", "start"]):
             subprocess.run(["git", *args], cwd=dst, check=True)
