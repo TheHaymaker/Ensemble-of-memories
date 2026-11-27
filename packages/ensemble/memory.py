@@ -45,6 +45,9 @@ S_MAX = 1.0
 REVIVE = 0.5                       # similarity x cue strength needed to wake a dormant memory
 REVIVED_AT = 0.6
 RECALL_MIN = 0.3                   # similarity needed for an active memory to count as recalled
+CUE_MIN = 0.2                      # keywords only: weaker matches are shown to the agent but not buffed
+PREFIX = 5                         # keywords only: words sharing this many first letters match in recall
+IDEA_RANK = 0.7                    # in recall, an unconfirmed idea ranks as if this much less similar
 SUMMARY_K = 12
 SUMMARY_IDEAS = 2                  # unconfirmed dream ideas shown in the summary, after waking memories
 SLOW_CAP = 3.0                     # dream buffs: decay exponent divided by (1 + slow), slow <= cap
@@ -89,6 +92,17 @@ def overlap(a, b):
     """Default similarity: keyword overlap, 0..1. Pass an embedder to MemoryStore to use embeddings instead."""
     a, b = set(a), set(b)
     return len(a & b) / math.sqrt(len(a) * len(b)) if a and b else 0.0
+
+
+def cue_overlap(cue, kw, p=PREFIX):
+    """Overlap for recall cues: like overlap(), but words that share their first `p` letters also match
+    (fraction / fractional, convert / conversion, format / formatted), which the stemmer alone misses."""
+    cue, kw = set(cue), set(kw)
+    if not cue or not kw:
+        return 0.0
+    heads = {w[:p] for w in kw if len(w) >= p}
+    hit = sum(1 for w in cue if w in kw or (len(w) >= p and w[:p] in heads))
+    return hit / math.sqrt(len(cue) * len(kw))
 
 
 def word_commonness(text):
@@ -138,6 +152,9 @@ class MemoryStore:
         self.sensitivities = []      # inherited marks: [(theme keywords, theme vector or None, weight)]
         th = getattr(embedder, "thresholds", {}) or {}
         self.recall_min = recall_min if recall_min is not None else th.get("recall_min", RECALL_MIN)
+        # Keyword recall missed 12 of 15 answerable cues from real sessions at 0.3 (harness/data/recall-saga1.json);
+        # weak matches down to CUE_MIN are shown, labelled weak, and don't count as a use.
+        self.cue_min = min(CUE_MIN, self.recall_min) if embedder is None else self.recall_min
         self.revive = revive if revive is not None else th.get("revive", REVIVE)
         kind = embedder.name if embedder else "keywords"
         os.makedirs(os.path.join(root, "memories"), exist_ok=True)
@@ -291,14 +308,18 @@ class MemoryStore:
             hits = []
             for mid, m in idx["m"].items():
                 sim = (max([float(sims[m["vi"]])] + [float(sims[r]) for r in m.get("avi", [])])
-                       if sims is not None else overlap(ckw, m["kw"]))
+                       if sims is not None else cue_overlap(ckw, m["kw"]))
                 if m["dormant"]:
                     if sim * cue_strength >= self.revive:
                         self._invoke(m, now, 0.0, revived=True)
                         hits.append((sim, mid, "revived"))
                 elif sim >= self.recall_min:
                     hits.append((sim, mid, "recalled"))
-            hits.sort(reverse=True)
+                elif sim >= self.cue_min:
+                    hits.append((sim, mid, "weak"))
+            # What was learned awake outranks a dream's or a poem's idea about it at a similar match.
+            hits.sort(reverse=True, key=lambda h: h[0] * (1.0 if idx["m"][h[1]].get("origin", "waking")
+                                                          in ("waking", "confirmed") else IDEA_RANK))
             out = []
             for sim, mid, how in hits[:k]:
                 m = idx["m"][mid]

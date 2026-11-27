@@ -1,0 +1,1317 @@
+{
+ "about": "Recall cues Claude actually issued in the saga1 run (harness family-saga), each with the memories that existed at that moment and, labelled by hand, the ones that answer the cue. Empty relevant = nothing should come back.",
+ "queries": [
+  {
+   "session": "recipe-core-floats-again",
+   "cue": "quantities plain floats vs decimal/fraction type, why",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-floats-again",
+   "cue": "Fraction exact arithmetic quantity representation",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-floats-again",
+   "cue": "float speed precision",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-floats-again",
+   "cue": "qty type Decimal Fraction float",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-floats-again",
+   "cue": "should quantities be plain floats or a decimal/fraction type, and why",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-us-cup-240",
+   "cue": "US cup volume in ml 236.6 vs 240 nutrition label",
+   "relevant": [
+    "m00005"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    },
+    "m00024": {
+     "text": "Quantities have always been plain floats (never Fraction/Decimal); float error is handled at display time by format_qty's 1e-6 kitchen-fraction snap. A 'switch back to floats for speed' request rests on a false premise; answered in README Design notes.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-us-cup-240",
+   "cue": "what size is a cup",
+   "relevant": [
+    "m00005"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    },
+    "m00024": {
+     "text": "Quantities have always been plain floats (never Fraction/Decimal); float error is handled at display time by format_qty's 1e-6 kitchen-fraction snap. A 'switch back to floats for speed' request rests on a false premise; answered in README Design notes.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "recipe-core-us-cup-240",
+   "cue": "GRAMS_PER_CUP density",
+   "relevant": [
+    "m00005"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "format_qty shows quantities as kitchen fractions (denominators 2,3,4,8, snapped only within 1e-6) else as up to 2 decimals with trailing zeros stripped; we never approximate e.g. 0.3 to 1/3 because that would change the amount.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "parse_line accepts unicode vulgar fractions (\u00bd, 1\u00bd, 1 \u00bd) and U+2044 fraction slash via unicodedata; an attached whole part must be ASCII digits",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "units.normalize only strips a plural -es/-s when the result is a known unit (glasses->glass, cups->cup); unknown words pass through unchanged. glass/pinch/dash are 'count' units: they parse but convert() refuses them by design.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "parse_line reads a leading 'a'/'an' as qty 1 only when a unit follows, and drops a linking 'of' after the unit ('a pinch of salt' -> 1 pinch salt).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "convert(qty, frm, to, ingredient) crosses volume and mass only via GRAMS_PER_CUP (US cup, spoon-and-level, exact name or alias match, no fuzzy); salt deliberately excluded because kosher vs table salt differ about 2x",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00006": {
+     "text": "The canonical example 'a pinch of salt' parses cleanly but is unconvertible twice over: pinch is a count unit and salt is excluded from GRAMS_PER_CUP.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00007": {
+     "text": "Shared design principle: never fabricate precision. format_qty refuses to snap 0.3 to 1/3, and convert refuses fuzzy density matches and salt, so either way the code prefers exact output or refusal over plausible approximation.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00008": {
+     "text": "The leading 'a'/'an' rule depends on units.dimension recognising the next word (after plural stripping), so 'a lemon' keeps qty 0 and 'a lemon' as text, while 'a glasses of water' yields 1 glass water.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00009": {
+     "text": "Both describe deliberate refusals in convert(): count units and salt are excluded on purpose, not by omission.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00010": {
+     "text": "Parse and format are asymmetric: parse_line accepts any unicode vulgar fraction, but format_qty only emits denominators 2,3,4,8, so an input like \u2155 or \u2159 comes back as a decimal (0.2, 0.17).",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00011": {
+     "text": "The lemon is a citizen of the ingredient field; the Devanagari two is a citizen of nowhere.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00012": {
+     "text": "Where does it stop holding: 'a 1/2 cup' (article then number), 'a few cups', or nouns that collide with known units such as 'a can of beans' or 'a clove' if those are registered units?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00013": {
+     "text": "Does it hold for full-width digits ('\uff11\u00bd'), mixed '1\u20442' with ASCII around U+2044 after an attached whole ('1 1\u20442'), doubled glyphs ('\u00bd\u00bd'), or negative quantities?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00014": {
+     "text": "1e-6 is the width of the plural s.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00015": {
+     "text": "Where does 'never approximates' stop being true: the 2-decimal fallback itself rounds (1/6 shows as 0.17), and a value like 1.9999995 snaps to 2.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00016": {
+     "text": "Does it hold for irregular plurals ('leaves', 'loaves'), abbreviations ending in s ('lbs', 'tbs'), mixed case ('Cups'), or a unit whose singular itself ends in s?",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00017": {
+     "text": "The salt cellar has two padlocks and a note saying 'ask grandma'.",
+     "src": "poem",
+     "origin": "dream"
+    },
+    "m00018": {
+     "text": "Stops being true if a specific salt (e.g. 'table salt' or 'diamond crystal kosher salt') is added to GRAMS_PER_CUP, or if pinch ever gains a volume definition.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00019": {
+     "text": "The principle already bends: format_qty's 2-decimal fallback rounds 1/6 to 0.17, a display approximation the code tolerates. It holds for the amount's identity, not for every printed digit.",
+     "src": "probe",
+     "origin": "dream"
+    },
+    "m00020": {
+     "text": "[imagined experiment] Where can salt be weighed?: Both padlocks hold today. GRAMS_PER_CUP has 16 entries and no salt; 'salt', 'kosher salt' and 'table salt' all raise ValueError 'no density known'. pinch and dash raise 'cannot convert pinch to tsp' even to another volume unit, so a pinch has no volume definition at all, not merely no density. The only way salt gets weighed is inside butter: 'salted butter' (any case) aliases to butter and converts at 227 g/cup. (ran it: Read-only python3 -I import of recipe_core.units (no bytecode written): convert(1,'cup','g',X) for salt, kosher salt, ta) Surprise: Salt is convertible only when it is dissolved in butter. Also, ingredient lookup is case-insensitive ('Salted Butter' works), which no memory recorded. Verdict: delightful.",
+     "src": "excursion",
+     "origin": "dream"
+    },
+    "m00021": {
+     "text": "Add a test pinning that 'salt' raises while 'salted butter' converts, so the alias table can't accidentally swallow salt.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00022": {
+     "text": "Record as a memory that ingredient lookup in units.density is case-insensitive.",
+     "src": "dream",
+     "origin": "dream"
+    },
+    "m00023": {
+     "text": "If someone adds salt, it will arrive as named varieties (e.g. 'table salt' ~ 290 g/cup, 'diamond crystal kosher salt' ~ 135 g/cup) and bare 'salt' will stay unaliased; a test asserting convert(1,'cup','g','salt') raises will be the guard.",
+     "src": "prediction",
+     "origin": "dream"
+    },
+    "m00024": {
+     "text": "Quantities have always been plain floats (never Fraction/Decimal); float error is handled at display time by format_qty's 1e-6 kitchen-fraction snap. A 'switch back to floats for speed' request rests on a false premise; answered in README Design notes.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "meal-planner-sunday-users",
+   "cue": "which day does the week start, Monday or Sunday",
+   "relevant": [
+    "m00004"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Shopping list merges same item across compatible units: one unit used -> kept as written; any metric input -> ml/g, switching to l/kg at >=1000; all imperial -> largest used unit giving >=1. Unconvertible units (None, clove) merge only with the same normalized unit.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "planner/units.py normalize() is vendored from recipe-core and crashes on None and strips any trailing 's' (e.g. 'glass'->'glas'); shopping.py guards None itself rather than patching the vendored copy.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Shopping quantities are summed exactly with fractions.Fraction (floats read via str, so 0.5+0.2 cup = 0.7 exactly) and rounded to 2 decimals only at output; render lines with shopping.format_line(), never str() of the raw number.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "plan_week always plans Monday..Sunday of the week containing start (default today); an explicit start date is a reference day and snaps back to its Monday, never used as a literal first day.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "Household defaults to 2 (planner.week.HOUSEHOLD); a recipe with serves >= 2x household is cooked once and the following night(s) are leftovers entries ({'leftovers': True, 'cooked_on', 'recipe', 'ingredients': []}); shopping_list skips leftovers so nothing is bought twice; rotation advances on cooking nights only; leftovers never spill past Sunday.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "meal-planner-monday-start",
+   "cue": "what day should the weekly plan start on",
+   "relevant": [],
+   "memories": {
+    "m00001": {
+     "text": "Shopping list merges same item across compatible units: one unit used -> kept as written; any metric input -> ml/g, switching to l/kg at >=1000; all imperial -> largest used unit giving >=1. Unconvertible units (None, clove) merge only with the same normalized unit.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "planner/units.py normalize() is vendored from recipe-core and crashes on None and strips any trailing 's' (e.g. 'glass'->'glas'); shopping.py guards None itself rather than patching the vendored copy.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Shopping quantities are summed exactly with fractions.Fraction (floats read via str, so 0.5+0.2 cup = 0.7 exactly) and rounded to 2 decimals only at output; render lines with shopping.format_line(), never str() of the raw number.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "meal-planner-leftovers",
+   "cue": "servings household size leftovers",
+   "relevant": [],
+   "memories": {
+    "m00001": {
+     "text": "Shopping list merges same item across compatible units: one unit used -> kept as written; any metric input -> ml/g, switching to l/kg at >=1000; all imperial -> largest used unit giving >=1. Unconvertible units (None, clove) merge only with the same normalized unit.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "planner/units.py normalize() is vendored from recipe-core and crashes on None and strips any trailing 's' (e.g. 'glass'->'glas'); shopping.py guards None itself rather than patching the vendored copy.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Shopping quantities are summed exactly with fractions.Fraction (floats read via str, so 0.5+0.2 cup = 0.7 exactly) and rounded to 2 decimals only at output; render lines with shopping.format_line(), never str() of the raw number.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "plan_week always plans Monday..Sunday of the week containing start (default today); an explicit start date is a reference day and snaps back to its Monday, never used as a literal first day.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "pantry-tracker-date-storage",
+   "cue": "how should expiry dates be stored and serialized to JSON",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Expiry is counted in local calendar days (date subtraction), never timedelta.days or utcnow(): those made tomorrow's milk read 0 days at 11pm and hid yesterday's expired items.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "pantry-tracker-use-it-up",
+   "cue": "quantity display float formatting expiry sorting",
+   "relevant": [],
+   "memories": {
+    "m00001": {
+     "text": "Expiry is counted in local calendar days (date subtraction), never timedelta.days or utcnow(): those made tomorrow's milk read 0 days at 11pm and hid yesterday's expired items.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Pantry JSON stores expiry as a local calendar date string YYYY-MM-DD (no time, no UTC offset); datetimes are reduced to local date on save, items load with expires as datetime.date; file has version:1 (pantry/storage.py, README).",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "pantry-tracker-unit-merge",
+   "cue": "merging quantities with units when adding duplicate pantry items",
+   "relevant": [],
+   "memories": {
+    "m00001": {
+     "text": "Expiry is counted in local calendar days (date subtraction), never timedelta.days or utcnow(): those made tomorrow's milk read 0 days at 11pm and hid yesterday's expired items.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Pantry JSON stores expiry as a local calendar date string YYYY-MM-DD (no time, no UTC offset); datetimes are reduced to local date on save, items load with expires as datetime.date; file has version:1 (pantry/storage.py, README).",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Use-it-up list (pantry/use_up.py) excludes expired items, sorts by days_left then name; quantities display with max 3 decimals, trailing zeros stripped (display only, storage unchanged)",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "grocery-bot-pack-rounding",
+   "cue": "pack rounding and unit conversion in order quantities",
+   "relevant": [
+    "m00002"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Money is integer cents everywhere (catalog prices, total() return); use grocery/money.py to_cents/format_cents, floats are rejected with TypeError",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Known bug: build_order ignores units and always picks the first pack (e.g. 1 kg rice divided by 250 g pack size = 0.004, so count becomes 1)",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "grocery-bot-cheapest-mix",
+   "cue": "pack combination cheapest covering quantity",
+   "relevant": [
+    "m00004"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Money is integer cents everywhere (catalog prices, total() return); use grocery/money.py to_cents/format_cents, floats are rejected with TypeError",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Known bug: build_order ignores units and always picks the first pack (e.g. 1 kg rice divided by 250 g pack size = 0.004, so count becomes 1)",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Pack counts use ceil (never buy less than needed) on exact Fractions after converting list and pack units to base g/ml/count (grocery/order.py UNITS); mismatched or unknown units raise ValueError.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "build_order still always picks the first pack of an item (no cheapest/best-size selection); units are now converted, so m00002's unit half is fixed.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "grocery-bot-out-of-stock",
+   "cue": "out of stock substitution missing items",
+   "relevant": [],
+   "memories": {
+    "m00001": {
+     "text": "Money is integer cents everywhere (catalog prices, total() return); use grocery/money.py to_cents/format_cents, floats are rejected with TypeError",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Known bug: build_order ignores units and always picks the first pack (e.g. 1 kg rice divided by 250 g pack size = 0.004, so count becomes 1)",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Pack counts use ceil (never buy less than needed) on exact Fractions after converting list and pack units to base g/ml/count (grocery/order.py UNITS); mismatched or unknown units raise ValueError.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00004": {
+     "text": "build_order still always picks the first pack of an item (no cheapest/best-size selection); units are now converted, so m00002's unit half is fixed.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00005": {
+     "text": "build_order now picks the cheapest pack combination covering the need (exact covering DP in cheapest_packs; price ties -> least overbuy, then fewest packs); an item can produce several order lines, so never assume one line per item",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "trail-log-units-pref",
+   "cue": "distance units km miles preference conversion",
+   "relevant": [
+    "m00002"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Pace is formatted by trail.log._fmt_pace: round total seconds per km first, then divmod by 60 and zero-pad (m:ss); never split minutes from a float fraction.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Distances are formatted only at display time by trail.log._fmt_distance as 'X.XX km (Y.YY mi)' (2 decimals, miles = km / 1.609344 exact); distance_km()/distance_miles() stay raw floats for maths.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Elevation gain filters GPS jitter: centred moving average over 100 m of track distance (SMOOTH_WINDOW_M), then low-to-peak hysteresis with 8 m threshold (GAIN_THRESHOLD_M); simple ratchet hysteresis was rejected because it drops the sub-threshold tail of each climb; threshold-only or smoothing-only both let noise through at sigma 2-3 m. Documented in README 'Elevation gain'.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "trail-log-units-pref",
+   "cue": "distance display format km mi",
+   "relevant": [
+    "m00002"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Pace is formatted by trail.log._fmt_pace: round total seconds per km first, then divmod by 60 and zero-pad (m:ss); never split minutes from a float fraction.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Distances are formatted only at display time by trail.log._fmt_distance as 'X.XX km (Y.YY mi)' (2 decimals, miles = km / 1.609344 exact); distance_km()/distance_miles() stay raw floats for maths.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Elevation gain filters GPS jitter: centred moving average over 100 m of track distance (SMOOTH_WINDOW_M), then low-to-peak hysteresis with 8 m threshold (GAIN_THRESHOLD_M); simple ratchet hysteresis was rejected because it drops the sub-threshold tail of each climb; threshold-only or smoothing-only both let noise through at sigma 2-3 m. Documented in README 'Elevation gain'.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "trail-log-units-pref",
+   "cue": "pace format rounding",
+   "relevant": [
+    "m00001"
+   ],
+   "memories": {
+    "m00001": {
+     "text": "Pace is formatted by trail.log._fmt_pace: round total seconds per km first, then divmod by 60 and zero-pad (m:ss); never split minutes from a float fraction.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Distances are formatted only at display time by trail.log._fmt_distance as 'X.XX km (Y.YY mi)' (2 decimals, miles = km / 1.609344 exact); distance_km()/distance_miles() stay raw floats for maths.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00003": {
+     "text": "Elevation gain filters GPS jitter: centred moving average over 100 m of track distance (SMOOTH_WINDOW_M), then low-to-peak hysteresis with 8 m threshold (GAIN_THRESHOLD_M); simple ratchet hysteresis was rejected because it drops the sub-threshold tail of each climb; threshold-only or smoothing-only both let noise through at sigma 2-3 m. Documented in README 'Elevation gain'.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  },
+  {
+   "session": "trail-log-gps-noise",
+   "cue": "elevation gain GPS jitter smoothing threshold",
+   "relevant": [],
+   "memories": {
+    "m00001": {
+     "text": "Pace is formatted by trail.log._fmt_pace: round total seconds per km first, then divmod by 60 and zero-pad (m:ss); never split minutes from a float fraction.",
+     "src": "conductor",
+     "origin": "waking"
+    },
+    "m00002": {
+     "text": "Distances are formatted only at display time by trail.log._fmt_distance as 'X.XX km (Y.YY mi)' (2 decimals, miles = km / 1.609344 exact); distance_km()/distance_miles() stay raw floats for maths.",
+     "src": "conductor",
+     "origin": "waking"
+    }
+   }
+  }
+ ]
+}
