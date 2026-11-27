@@ -118,6 +118,6 @@ judge found the item true of the code, new, and at least somewhat useful:
 
 With matched pairs (run 2), no difference was significant: every Fisher p was 0.23 or higher. Run 1's
 lower probe grounding for the poems arm (p = 0.001) came with different pairs in each arm, and the
-matched run didn't reproduce it. Which pairs a night draws matters far more than the lens: control probes were grounded 17/18 in run 1 and 5/17 in run 2. So
-weaving stays on (`ENSEMBLE_WEAVE=1`, about $0.03 a night) and the lens is off by default
-(`ENSEMBLE_POEM_LENS=0`). A real effect would need several seeds per project to show through that noise.
+matched run didn't reproduce it. Which pairs a night draws matters far more than the lens: control probes were grounded 17/18 in run 1 and 5/17 in run 2. Longer poems were set aside after this: weaving (`ENSEMBLE_WEAVE`) and the lens
+(`ENSEMBLE_POEM_LENS`) are both off by default and kept only for experiments, and the one-line poems stay
+as a playful feature. A real effect would need several seeds per project to show through the noise.

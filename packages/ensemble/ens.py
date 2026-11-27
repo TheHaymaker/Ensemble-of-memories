@@ -22,7 +22,8 @@ Environment:
     ENSEMBLE_ROSTER     players (default conductor,builder,reviewer,tester)
     ENSEMBLE_EMBEDDER   keywords (default) | hybrid | model2vec | gemini | st   (fixed once a store exists)
     ENSEMBLE_SLEEP_AT   new memories that make sleep due (default 30)
-    ENSEMBLE_WEAVE      1 (default): a night first weaves earlier one-line figures into one longer poem
+    ENSEMBLE_WEAVE      1: a night first weaves earlier one-line figures into one longer poem (default 0:
+                        an experiment that showed no measurable benefit; poems stay a playful one-liner feature)
     ENSEMBLE_POEM_LENS  1: dreams, poems and excursions see the latest woven poem as a lens (default 0:
                         in two blind A/Bs it made no measurable difference; see harness/README.md)
     ENSEMBLE_EXCURSIONS excursion seeds per night (default 1)
@@ -50,7 +51,7 @@ from tools import Player                      # noqa: E402
 HOME = os.path.expanduser(os.environ.get("ENSEMBLE_HOME", "~/.ensemble"))
 ROSTER = [r.strip() for r in os.environ.get("ENSEMBLE_ROSTER", "conductor,builder,reviewer,tester").split(",") if r.strip()]
 SLEEP_AT = int(os.environ.get("ENSEMBLE_SLEEP_AT", "30"))
-WEAVE = os.environ.get("ENSEMBLE_WEAVE", "1") != "0"
+WEAVE = os.environ.get("ENSEMBLE_WEAVE", "0") != "0"
 POEM_LENS = os.environ.get("ENSEMBLE_POEM_LENS", "0") != "0"
 EXCURSIONS = int(os.environ.get("ENSEMBLE_EXCURSIONS", "1"))
 

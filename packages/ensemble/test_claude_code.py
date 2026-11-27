@@ -109,16 +109,18 @@ def test_weave_then_the_poem_is_a_lens_in_every_step():
                            "deploys freeze on tuesdays", "the printer on floor 3 jams on duplex",
                            "audit logs are kept for 90 days", "tokens expire after one hour"]):
         run(["remember", t], h)
-    assert "skip" in json.loads(run(["poem-weave"], h))          # no figures yet
+    assert "skip" in json.loads(run(["poem-weave"], h))          # off by default
+    h_env = {"ENSEMBLE_WEAVE": "1"}
+    assert "skip" in json.loads(run(["poem-weave"], h, env_extra=h_env))   # on, but no figures yet
     for _ in range(2):
         pp = json.loads(run(["poem-pairs"], h))["pairs"]
         run(["poem-apply"], h, stdin=json.dumps([{"A": x["A"]["id"], "B": x["B"]["id"],
                                                   "figures": [{"text": "a plain one", "p": 0.4}, {"text": f"zeta-quill {x['A']['id']}", "p": 0.01}],
                                                   "aliases": {}, "verse": "v"} for x in pp]))
-    shown = json.loads(run(["poem-weave"], h))
+    shown = json.loads(run(["poem-weave"], h, env_extra=h_env))
     ids = [f["id"] for f in shown["figures"]]
     assert len(ids) >= 3 and shown["figures"][0]["from"]
-    out = run(["weave-apply"], h, stdin=json.dumps({"title": "Quills", "text": "a\nb\nc\nd", "from": ids}))
+    out = run(["weave-apply"], h, env_extra=h_env, stdin=json.dumps({"title": "Quills", "text": "a\nb\nc\nd", "from": ids}))
     assert out.startswith(f"wove {len(ids)} of {len(ids)}"), out
     assert "poem" not in json.loads(run(["dream-pairs"], h))       # the lens is off by default
     on = {"ENSEMBLE_POEM_LENS": "1"}

@@ -16,7 +16,8 @@ check refuses quoted braces in commands. `ens <command> --help` explains any ste
 
 ## 0. Weave (consolidating the poems)
 
-Run `ens poem-weave`. If it prints `skip`, go on to the dreams. Otherwise it shows the one-line
+Run `ens poem-weave`. It is off unless this project opted in, so it usually prints `skip`: then go on
+to the dreams. Otherwise it shows the one-line
 figures earlier nights left behind, each with the memories it came from, and recent verses. Compose
 ONE poem from them, 8 to 24 lines: read the figures together so they answer and complicate each other.
 Keep their strangeness and their exact referents; don't explain them, summarize the project, or end
