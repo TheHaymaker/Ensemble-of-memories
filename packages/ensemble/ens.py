@@ -24,7 +24,7 @@ Environment:
     ENSEMBLE_SLEEP_AT   new memories that make sleep due (default 30)
     ENSEMBLE_WEAVE      1 (default): a night first weaves earlier one-line figures into one longer poem
     ENSEMBLE_POEM_LENS  1: dreams, poems and excursions see the latest woven poem as a lens (default 0:
-                        in a first blind A/B it did not make probes or excursions better; see harness/poem_ab.py)
+                        in two blind A/Bs it made no measurable difference; see harness/README.md)
     ENSEMBLE_EXCURSIONS excursion seeds per night (default 1)
     ENSEMBLE_NIGHT_SEED fixes which pairs and seeds a night picks (experiments: two arms see the same ones)
 
