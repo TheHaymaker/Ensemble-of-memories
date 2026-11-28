@@ -1,6 +1,6 @@
 {
-  "about": "Can lessons form in real runs? One project, ten sessions that keep returning to the same few decisions (round only at display, metric inside, one pace formatter), with a night after every two or three sessions. A lesson needs a waking memory used 4+ times with spaced uses, judged in a dream, and consolidated across 2 nights. About 10 sessions and 5 nights with Claude.",
-  "env": {"ENSEMBLE_SLEEP_AT": "6"},
+  "about": "Can blessings-and-curses (lessons) form in real runs? One project, ten sessions that keep returning to the same few decisions (round only at display, metric inside, one pace formatter), with a night after every two or three sessions. One needs a waking memory used 4+ times with spaced uses, judged in a dream, and consolidated across 2 nights. About 10 sessions and 5 nights with Claude.",
+  "env": {"FAM_SLEEP_AT": "6"},
   "projects": ["trail-log"],
   "nudge": true,
   "beats_per_session": 0,

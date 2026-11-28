@@ -81,8 +81,8 @@ def test_a_child_hears_its_parent_without_open_questions():
     f.birth("planner", os.path.join(root, "planner", "memory"), ["recipes"])
     child = player(root, f, "planner")
     heard = child.listen()
-    assert "format_qty snaps to kitchen fractions" in heard and "your parent, advice only" in heard, heard
-    assert "family saying" in child.recall("how should the shopping list format quantities", 0.5)
+    assert "format_qty snaps to kitchen fractions" in heard and "your parent, unsolicited, advice only" in heard, heard
+    assert "family advice" in child.recall("how should the shopping list format quantities", 0.5)
     return "listen shows the parent's most relied-on memory as a saying; recall finds it by the task's words"
 
 
@@ -95,7 +95,7 @@ def test_a_new_generation_hears_its_heirlooms():
     out = f.milestone("recipes", os.path.join(root, "recipes@2", "memory"), "v2")
     heir = player(root, f, out["name"])
     heard = heir.listen()
-    assert "family heirloom" in heard and "236.6 ml" in heard, heard
+    assert "family baggage" in heard and "236.6 ml" in heard, heard
     hid = next(h for h in f._load()["heirlooms"])
     assert heir.adopt_saying(hid).startswith("adopted as m")             # heirlooms can be taken in too
     assert f._load()["sayings"] == {} or all(s.get("told") != "birth" for s in f._load()["sayings"].values())

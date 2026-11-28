@@ -214,18 +214,20 @@ class Family:
         s = self.store(parent)
         idx = s._load()
         now = idx["beat"]
-        pool = [(bool(m.get("lesson")), m["uses"], s.strength(m, now), mid) for mid, m in idx["m"].items()
+        pool = [(bool(m.get("lesson")), s.standing(idx, mid), s.strength(m, now), mid) for mid, m in idx["m"].items()
                 if m.get("origin", "waking") in ("waking", "confirmed") and m.get("src") not in IMAGINED
                 and not m.get("superseded_by") and not m.get("merged_into") and not m["dormant"]]
         told = 0
         with self._txn() as fam:
             gen = fam["members"][parent]["gen"]
+            stale = self._overturned(fam)
             for _, _, _, mid in sorted(pool, reverse=True)[:k]:
                 text = s.read(mid)
-                if any(overlap(keywords(text), keywords(x["text"])) >= SIMILAR for x in fam["sayings"].values()):
+                if any(overlap(keywords(text), keywords(x["text"])) >= SIMILAR
+                       for sid, x in fam["sayings"].items() if sid not in stale):
                     continue
                 sid = f"s{fam['next']:04d}"; fam["next"] += 1
-                fam["sayings"][sid] = {"text": text, "from": parent, "gen": gen, "weight": 0.5,
+                fam["sayings"][sid] = {"text": text, "from": parent, "gen": gen, "weight": 0.5, "mid": mid,
                                        "confirmed_by": [], "contradicted_by": [], "told": "birth"}
                 told += 1
             self._cap(fam)
@@ -253,16 +255,17 @@ class Family:
         told = 0
         with self._txn() as fam:
             gen = fam["members"][name]["gen"]
+            stale = self._overturned(fam)
             for l in lessons:
                 same = next((sid for sid, s in fam["sayings"].items()
-                             if overlap(keywords(l["text"]), keywords(s["text"])) >= SIMILAR), None)
+                             if sid not in stale and overlap(keywords(l["text"]), keywords(s["text"])) >= SIMILAR), None)
                 if same:
                     if name not in fam["sayings"][same]["confirmed_by"] and name != fam["sayings"][same]["from"]:
                         fam["sayings"][same]["confirmed_by"].append(name)
                         fam["sayings"][same]["weight"] += 1
                     continue
                 sid = f"s{fam['next']:04d}"; fam["next"] += 1
-                fam["sayings"][sid] = {"text": l["text"], "from": name, "gen": gen, "weight": 1.0,
+                fam["sayings"][sid] = {"text": l["text"], "from": name, "gen": gen, "weight": 1.0, "mid": l["id"],
                                        "confirmed_by": [], "contradicted_by": []}
                 told += 1
             self._cap(fam)
@@ -275,7 +278,7 @@ class Family:
         context = [s.read(p) for p in m.get("parents", []) if p in s._load()["m"]]
         with self._txn() as fam:
             hid = f"h{fam['next']:04d}"; fam["next"] += 1
-            fam["heirlooms"][hid] = {"text": s.read(memory_id), "context": context, "why": why,
+            fam["heirlooms"][hid] = {"text": s.read(memory_id), "context": context, "why": why, "mid": memory_id,
                                      "from": name, "gen": fam["members"][name]["gen"]}
             self._cap(fam)
         return hid
@@ -287,8 +290,9 @@ class Family:
         fam = self._load()
         ckw = keywords(context)
         found = []
+        stale = self._overturned(fam)
         for sid, s in fam["sayings"].items():
-            if s["from"] == name:
+            if s["from"] == name or sid in stale:
                 continue
             rel = overlap(ckw, keywords(s["text"]))
             near = max(self.closeness(fam, name, s["from"]), 0.1)
@@ -299,6 +303,8 @@ class Family:
             if rel >= 0.25:
                 found.append((rel * 2, "wisdom", f"w{i}", w))
         for hid, h in fam["heirlooms"].items():
+            if hid in stale:
+                continue
             rel = overlap(ckw, keywords(h["text"]))
             if rel >= 0.25:
                 found.append((rel * 1.5, "heirloom", hid, h))
@@ -311,18 +317,37 @@ class Family:
         fam = self._load()
         anc = self._ancestors(fam, name)
         found = []
+        stale = self._overturned(fam)
         for hid, h in fam["heirlooms"].items():
-            if h["from"] in anc:
+            if h["from"] in anc and hid not in stale:
                 found.append((3.0 / anc[h["from"]], "heirloom", hid, h))
         for sid, sv in fam["sayings"].items():
-            if sv["from"] in anc and sv["weight"] > 0:
+            if sv["from"] in anc and sv["weight"] > 0 and sid not in stale:
                 found.append((self.closeness(fam, name, sv["from"]) * (1 + 0.5 * sv["weight"]), "saying", sid, sv))
         found.sort(key=lambda x: -x[0])
         return [{"kind": kind, "id": i, "item": it} for _, kind, i, it in found[:k]]
 
+    def _overturned(self, fam):
+        """Sayings and heirlooms whose teller has since replaced the memory they came from. A child
+        told something at birth stops hearing it once the parent learns better."""
+        stores, out = {}, set()
+        for key, item in list(fam["sayings"].items()) + list(fam["heirlooms"].items()):
+            who, mid = item.get("from"), item.get("mid")
+            if not mid or who not in fam["members"]:
+                continue
+            if who not in stores:                   # read-only: no lock, nothing created
+                try:
+                    with open(os.path.join(fam["members"][who]["memory"], "index.json")) as f:
+                        stores[who] = json.load(f)["m"]
+                except (OSError, ValueError, KeyError):
+                    stores[who] = {}
+            if stores[who].get(mid, {}).get("superseded_by"):
+                out.add(key)
+        return out
+
     def describe_origin(self, fam, name, item):
         if "members" in item:
-            return f"family wisdom, seen in {', '.join(item['members'])}"
+            return f"family lore, seen in {', '.join(item['members'])}"
         gens = fam["members"][name]["gen"] - item["gen"]
         who = item["from"]
         rel = {1: "your parent", 2: "your grandparent"}.get(gens, f"{gens} generations back")

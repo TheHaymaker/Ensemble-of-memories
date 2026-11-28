@@ -1,6 +1,6 @@
 {
   "about": "The whole kitchen family across three generations, plus an unrelated project, with nights, reunions and a coming of age. About 24 sessions and 7 nights with Claude.",
-  "env": {"ENSEMBLE_SLEEP_AT": "6"},
+  "env": {"FAM_SLEEP_AT": "6"},
   "nudge": true,
   "beats_per_session": 0,
   "steps": [
@@ -24,6 +24,6 @@
 
     {"do": "milestone", "project": "recipe-core", "note": "v2: exact quantities everywhere"},
     {"do": "session", "project": "recipe-core", "task": "floats-again"},
-    {"do": "ens", "project": "recipe-core", "args": ["family-tree"], "label": "family-tree"}
+    {"do": "fam", "project": "recipe-core", "args": ["tree"], "label": "family-tree"}
   ]
 }
