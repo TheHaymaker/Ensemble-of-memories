@@ -45,7 +45,8 @@ A scenario is JSON: `projects` (default all), `env` (e.g. `FAM_SLEEP_AT`), `nudg
 
 Included: `smoke` (2 sessions and a night), `no-nudge` (does Claude use Family Matters unprompted?),
 `family-saga` (three generations, an unrelated founder, reunions, a coming of age; about 24
-sessions and 7 nights), `many-nights` (for `--fake`: enough repetition to reach blessings-and-curses and advice).
+sessions and 7 nights), `lessons` (one project, 10 sessions returning to the same decisions, 5 nights;
+the first real run, about $5.40, formed 3 blessings-and-curses), `many-nights` (for `--fake`: enough repetition to reach blessings-and-curses and advice).
 
 ## Families and births
 
