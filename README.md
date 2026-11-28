@@ -4,54 +4,42 @@
 
 <p align="center">
   <b>Long-lived, per-project memory for Claude Code.</b><br>
-  It never forgets what was decided and why, represses what stops mattering,<br>
-  hardens what keeps proving useful into a blessing and a curse, and hands its generational trauma down to the projects that come after.
+  It never forgets a decision, represses what stops mattering,<br>
+  and hands its baggage down to the projects that come after.
 </p>
 
 ---
 
 ## TL;DR
 
-- **What it is:** a small `fam` CLI, two Claude Code skills and a SessionStart hook. Claude remembers decisions (`fam never-forget`), brings them up before re-deciding (`fam bring-up`), and starts every session with the family gossip (`fam gossip`): a short briefing on what this project knows.
-- **Why:** a new session only knows what's in the repo. Decisions and preferences that were only ever *said* ("whole grams only, please") get lost. Family Matters keeps them, and will bring them up again. And again.
-- **Does it work?** In a controlled A/B on real Claude sessions, it raised consistency with earlier decisions from **30/48 to 39/48**, and followed a preference that was only ever said in conversation **3/3 times vs 0/3** without it. Almost all of that came through the session-start briefing. Where the code already showed the answer, it made no difference. ([details](#what-the-lab-found))
-- **What it costs:** about a third more turns per session and roughly 6% more spend in that test.
-- **What makes it different:**
-  - **[Decay](#decay-forgetting-on-purpose).** Memories fade unless they're used, get repressed, and can be recovered. What keeps proving useful hardens into a **blessing-and-a-curse** that never fades (`fam lessons`, `fam blessings` or `fam curses` lists them). The briefing stays around 200 tokens however much is stored.
-  - **[Generations and epigenetics](#generations-and-epigenetics).** Related projects form a family. Children are born hearing their parents' best-tested knowledge as unsolicited advice, inherit their temperament as traits, and carry big experiences (like a credential leak) as inherited **generational trauma** that weakens with each generation. A project that outgrows its world moves out as a new generation.
-  - **[Nights: "That's not how I remember it"](#nights-thats-not-how-i-remember-it).** Dreams revisit and reconcile memories while Claude sleeps on it.
+- **What:** a `fam` CLI, a few Claude Code skills and a SessionStart hook. Claude saves decisions (`fam never-forget`), checks them before re-deciding (`fam bring-up`), and opens every session with a short briefing (`fam gossip`).
+- **Why:** a fresh session only knows what's in the repo. Things that were only ever *said* ("whole grams only, please") get lost. Family Matters keeps them.
+- **Does it work?** In an A/B on real Claude sessions it raised consistency with earlier decisions from **30/48 to 39/48**, and honored a conversation-only preference **3/3 vs 0/3**. It doesn't help where the code already shows the answer. ([details](#what-the-lab-found))
+- **Cost:** about a third more turns per session, about 6% more spend.
+- **Different because** memories [fade unless used](#decay-forgetting-on-purpose), related projects [inherit from each other](#generations-and-generational-trauma), and [nights](#nights) revisit what was learned.
 - **Install:** `cd packages/family-matters && ./install.sh --hook`. No API keys, no server, plain files in `~/.family-matters`.
 
 ```console
 $ fam gossip
 beat 0 | changed: none
-memory: 3 active, 0 repressed, 0 blessings-and-curses
+memory: 2 active, 0 repressed, 0 blessings-and-curses
   m00001 short 0.80: Whenever we show grams, whole grams only (the baker asked)
   m00002 short 0.70: Errors raise RecipeError, never ValueError
-  m00003 short 0.60: A cup is 240 ml in this project
 ```
 
 ## Install
 
 ```bash
-git clone https://github.com/TheHaymaker/ensemble-of-memories
-cd ensemble-of-memories/packages/family-matters
-./install.sh --hook          # add --mcp to also register it as an MCP server
+git clone https://github.com/TheHaymaker/Ensemble-of-memories
+cd Ensemble-of-memories/packages/family-matters
+./install.sh --hook          # add --mcp to also register an MCP server
 ```
 
-This installs:
+You get the `fam` command, the `family-matters` and `thats-not-how-i-remember-it` skills, and a SessionStart hook that runs the briefing. Your `~/.claude/settings.json` is backed up and merged. Then just work: Claude uses the skills on its own. From a terminal, try `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help`.
 
-- **the `fam` command** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`;
-- **skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night: dreams, poems, excursions), with seven aliases for the night named after other family sayings;
-- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family gossip), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
-
-Then just work. Claude uses the skills by itself. Run `/thats-not-how-i-remember-it` when `fam gossip` says therapy is overdue, and use `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help` from your terminal. The full guide, with every command and what the family calls things, is in [`packages/family-matters/README.md`](packages/family-matters/README.md).
-
-**Coming from Ensemble?** Re-run `./install.sh`. It moves `~/.ensemble` to `~/.family-matters`, keeps `ens` working as a shim for `fam`, and swaps in the new skills and hook. Old command names (`ens listen`, `ens remember`, `ens lessons`) and `ENSEMBLE_*` variables still work.
+Coming from Ensemble? Re-run `./install.sh`. Your memory moves over and every `ens` command still works. The [package README](packages/family-matters/README.md) has every command and what the family calls things.
 
 ## How it works
-
-### A session
 
 ```mermaid
 flowchart LR
@@ -67,31 +55,11 @@ flowchart LR
     Store -.->|next session| L
 ```
 
-The briefing stays small (about 150 to 200 tokens of memory) however much the project has stored, because only the strongest active memories make it in.
-
-### Nights: "That's not how I remember it"
-
-When enough unprocessed memories have piled up, `fam gossip` says therapy is overdue and `/thats-not-how-i-remember-it` runs a night. Every family saying that describes a night works too: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`. Claude plays every part. Each step is a two-step exchange: `fam` proposes, Claude answers, and `fam` applies the answers.
-
-```mermaid
-flowchart TB
-    due{{"fam gossip: therapy is overdue"}} --> D
-    subgraph night ["/thats-not-how-i-remember-it"]
-        direction TB
-        D["<b>Dreams</b><br/>pairs new memories with older and repressed ones.<br/>Claude judges: reinforce, link, qualify,<br/>replace, contradict, or flag a tension"]
-        P["<b>Poems</b><br/>one-line figures from unrelated memories,<br/>plus probes on where a blessing-and-a-curse stops holding"]
-        E["<b>Excursions</b><br/>curious what-ifs: thought experiments<br/>and hypotheses, kept as <i>imagined</i>"]
-        D --> P --> E
-    end
-    E --> LS["Blessings-and-curses form from memories that keep proving useful"]
-    LS --> next([next morning's briefing])
-```
-
-The trust rules are strict. Anything a dream, poem or excursion makes is labelled *imagined* and stays an unconfirmed idea until a waking session actually uses it. Dreams can't overrule a waking memory or soften a blessing-and-a-curse. Poems are a playful extra: they add search keys and odd questions, and they settle nothing.
+The briefing holds only the strongest active memories, so it stays around 200 tokens however much is stored.
 
 ## Decay: forgetting on purpose
 
-Most memory tools only grow. Family Matters represses, on purpose, so the briefing stays short and current. Every memory has a strength that fades a little each beat, at a rate set by its tier, and only being **used** slows it down.
+Every memory fades a little each beat. Using it slows the fade and moves it up a tier. Memories nobody uses are repressed: out of the briefing, but still searchable.
 
 ```mermaid
 stateDiagram-v2
@@ -110,25 +78,19 @@ stateDiagram-v2
     Attic --> Short: restore
 ```
 
-| tier | keeps per beat | how a memory gets there |
+| tier | keeps per beat | gets there by |
 |---|---|---|
-| short | 80% | every new memory starts here |
-| intermediate | 95% | 2 uses, at least 3 beats apart |
+| short | 80% | being new |
+| intermediate | 95% | 2 uses, spaced apart |
 | long | 99% | 5 spaced uses |
-| repressed | stops fading | strength fell below 0.05; left out of the briefing, still searchable |
-| blessing-and-a-curse | never fades | used 4+ times, consolidated for 2 nights, reinforced in a dream; only settling an argument (a vote) overturns it |
+| repressed | stops fading | dropping below 0.05 |
+| blessing-and-a-curse | never fades | 4+ uses, 2 nights consolidated, reinforced in a dream; only a vote overturns it |
 
-- **Spacing, not cramming.** Several uses in one beat count once. Only uses spread over time promote a memory.
-- **Buffs.** Every use permanently raises a memory's floor a little (the n-th use adds 0.02/n, up to 0.15). After about 7 uses it can never be repressed.
-- **Recovered memories.** A repressed memory comes back only when a bring-up is both strong and close to it, then has to earn its place again.
-- **The attic.** A repressed memory that therapy keeps finding no use for, and that nobody touches for a long time, goes up to a compressed archive. `restore()` brings it back down.
-- **Revisionist history.** When a newer memory overturns an older one (`fam revise-history`, or `--replaces`), the older is cut to 30% strength and marked **OUTDATED**, pointing to the newer, and is never handed down.
+Each use also raises a memory's floor, so one used about 7 times is never repressed. When a decision is overturned (`fam revise-history`, or `fam never-forget --replaces`), the old memory is marked outdated and never briefed, recalled or handed down again. In a 2,000-memory simulation, the briefing stayed under 200 tokens while 1,425 memories sat repressed on disk.
 
-The result is a flat briefing. In a 500-beat simulation with 2,000 memories, the summary stayed under about 200 tokens while 1,425 memories sat repressed on disk.
+## Generations and generational trauma
 
-## Generations and epigenetics
-
-Projects form families. Each project keeps its own memory, and what passes between relatives is advice, temperament and baggage, never rules.
+Related projects form a family. What passes between them is advice and temperament, never rules.
 
 ```mermaid
 flowchart TB
@@ -139,11 +101,9 @@ flowchart TB
     MP <-. "adoption (you approve)" .-> TL["trail-log"]
 ```
 
-**Born with unsolicited advice.** Start a project with `FAM_PARENTS=recipe-core` and it's born hearing its parent's 3 most relied-on memories as **advice**, blessings-and-curses first. It shows up in the briefing as "unsolicited, advice only". The child takes it (`fam take-advice`) only if it fits, and it then has to be confirmed by use like any new idea. A few specific memories can also be handed down intact as **baggage**.
-
-**Traits.** Curiosity, skepticism, steadiness and expressiveness are read from how each project actually lived, and they tune its settings: excursions per night, how high the dream judge's bar is, how many uses it takes to confirm an idea or form a blessing-and-a-curse. A child starts from a blend of its relatives' traits (parent 1, grandparent 0.5, sibling 0.3, aunt or uncle 0.15), and its own experience takes over as it lives.
-
-**Generational trauma (epigenetic marks).** A big experience, like a credential leak, leaves **generational trauma**: heightened sensitivity to that theme, so related memories count for more. Like all good trauma, it gets passed down. `fam generational-trauma` (or `fam received-wisdom`) lists it.
+- **Unsolicited advice.** Start a project with `FAM_PARENTS=recipe-core` and it's born hearing its parent's 3 most relied-on memories. They're labelled advice only. The child takes one (`fam take-advice`) if it fits, then has to confirm it by use. A few memories can also be handed down intact as **baggage**.
+- **Traits.** Curiosity, skepticism, steadiness and expressiveness are read from how a project actually lived, and they tune its settings. A child starts from a blend of its relatives' traits until its own experience takes over.
+- **Generational trauma.** A big experience, like a credential leak, leaves a lasting sensitivity to that theme. It passes down at half strength per generation, fades in a calm life, and comes back at full strength after a similar experience. See it with `fam generational-trauma`.
 
 ```mermaid
 flowchart LR
@@ -154,47 +114,51 @@ flowchart LR
     C -. "a similar experience<br/>renews it to full" .-> C
 ```
 
-**Generations.** A long-lived project **moves out** when the world its memories describe has changed, not when it gets big. Family Matters suggests it when a lot of its knowledge has been overturned, after 60 nights, or when memories mention a release, rewrite or migration. You decide (`fam move-out`, or `fam stay-home` to put it off), or have a `fam midlife-crisis "v2 rewrite"` and do it now. The current generation then retires as the parent: its blessings-and-curses become advice, its most relied-on memories become baggage, and `project@2` starts fresh while hearing its predecessor as advice.
+- **Moving out.** When the world a project's memories describe has changed (many decisions overturned, 60 nights, or talk of a rewrite or migration), Family Matters suggests a new generation. You decide: `fam move-out`, `fam stay-home`, or `fam midlife-crisis "v2 rewrite"` to do it now. The old generation retires as the parent of `project@2`.
+- **Thanksgiving** (`fam thanksgiving`) gathers the family: advice that held up gains weight, advice voted down loses it, and when unrelated projects keep learning the same thing, it proposes an adoption for you to approve.
 
-**Thanksgiving** (`fam thanksgiving`, the family reunion) gathers everyone: blessings-and-curses are retold as advice, advice that was taken and held up gains weight, advice that was voted down loses it, and a blessing-and-a-curse that recurs across members becomes family lore. When unrelated projects keep learning the same lessons, Thanksgiving proposes an adoption for you to approve (`fam adopt`). `fam tree` draws it all, skeletons included, as an HTML page and a Mermaid chart.
+## Nights
+
+When enough unprocessed memories pile up, `fam gossip` says therapy is overdue. Run `/thats-not-how-i-remember-it` (or one of seven aliases, such as `/things-will-look-better-in-the-morning`). Claude works through three steps:
+
+1. **Dreams** pair new memories with older and repressed ones. Claude decides whether each pair reinforces, links, qualifies, replaces or contradicts, or is an open tension.
+2. **Poems** make one-line figures from unrelated memories. They're a playful extra, not a proven gain: they add search keys and odd questions, and settle nothing.
+3. **Excursions** follow curious what-ifs as thought experiments and hypotheses.
+
+Anything a night invents is labelled *imagined* and stays an idea until a waking session actually uses it. Dreams can't overrule a waking memory.
 
 ## What the lab found
 
-This repo is also a lab. `harness/lab.py` runs real, headless Claude sessions against the small [test projects](test-projects), each in an isolated Family Matters home, and reports what memory looked like after every step.
+This repo is also a lab: `harness/lab.py` runs headless Claude sessions against the [test projects](test-projects) and records what memory looked like after every step.
 
-The recall A/B ([PR #9](https://github.com/TheHaymaker/ensemble-of-memories/pull/9)) built up a history of decisions on a recipe project, then gave fresh sessions new tasks with and without memory, 3 reps each, scored by checks and a blind judge:
+The recall A/B ([PR #9](https://github.com/TheHaymaker/Ensemble-of-memories/pull/9)) built a history of decisions on a recipe project, then gave fresh sessions new tasks with and without memory (3 reps each, checks plus a blind judge):
 
 | | with memory | without |
 |---|---|---|
 | did what was asked | 60/60 | 60/60 |
-| **consistent with earlier decisions** | **39/48 (81%)** | 30/48 (62%) |
-| a preference only ever said in conversation | **3/3** | 0/3 |
-| a child project following its parent's conventions | **6/6 checks** | 0/6 |
-| blind judge, consistency (1 to 5) | **3.61** | 2.94 |
-| blind judge, quality (1 to 5) | 3.72 | 3.67 |
-| turns per session | 11.4 | 8.5 |
-| cost per session | $0.26 | $0.24 |
+| **consistent with earlier decisions** | **39/48** | 30/48 |
+| a preference only ever said in chat | **3/3** | 0/3 |
+| a child following its parent's conventions | **6/6** | 0/6 |
+| blind judge: consistency / quality (1 to 5) | **3.61** / 3.72 | 2.94 / 3.67 |
+| turns / cost per session | 11.4 / $0.26 | 8.5 / $0.24 |
 
-**The honest reading:** memory doesn't make Claude better at the work itself. It helps by carrying knowledge the repo doesn't contain. On probes where the earlier decision was visible in the code, tests or README, both arms scored the same. The session-start briefing (family gossip) carried every winning trial; dreams and poems played no visible part in that test. Samples are small, so only large effects show up. One failure it surfaced, a child inheriting a decision its parent had since overturned, is being fixed.
+Memory doesn't make Claude better at the work. It carries what the repo doesn't hold, almost entirely through the session-start briefing. Dreams and poems played no visible part. Samples are small, so only large effects show. The one failure it found, a child inheriting a decision its parent had overturned, is now fixed (`fam revise-history`).
 
 ## This repo
 
 | folder | what |
 |---|---|
-| [`packages/family-matters`](packages/family-matters) | The `fam` CLI, skills, SessionStart hook, MCP server, memory, dreams, poems, excursions and families, on the Ensemble engine. Install with `packages/family-matters/install.sh --hook`. |
-| [`test-projects`](test-projects) | Small realistic projects to run Claude sessions against, related as a family (see `test-projects/family.json`). Each has a `tasks.json` of session prompts. |
-| [`harness`](harness) | `lab.py`: runs headless Claude sessions and nights against the test projects, each run in its own isolated home, with snapshots and a report. |
-| [`assets`](assets) | the logo and banner |
-
-Lab quick start:
+| [`packages/family-matters`](packages/family-matters) | the `fam` CLI, skills, hook, MCP server and the memory engine |
+| [`test-projects`](test-projects) | small related projects for Claude sessions to work on, each with a `tasks.json` |
+| [`harness`](harness) | `lab.py`: runs sessions and nights in isolated homes, with snapshots and a report |
+| [`assets`](assets) | logo and banner |
 
 ```bash
-python3 harness/lab.py setup                                   # once: .lab/venv with the deps
-python3 harness/lab.py play smoke1 harness/scenarios/smoke.json --fake   # offline, seconds
-python3 harness/lab.py play smoke2 harness/scenarios/smoke.json          # real Claude, a few minutes
-open runs/smoke2/report.md
+python3 harness/lab.py setup                                              # once
+python3 harness/lab.py play smoke1 harness/scenarios/smoke.json --fake    # offline, seconds
+python3 harness/lab.py play smoke2 harness/scenarios/smoke.json           # real Claude, a few minutes
 ```
 
-Its own tests: `cd packages/family-matters && python3 test_claude_code.py` (and the other `test_*.py`).
+Tests: `cd packages/family-matters && python3 test_claude_code.py` (and the other `test_*.py`).
 
-<sub>Under the hood, Family Matters is built on **Ensemble**, which is why the engine's files keep that name and `ens` still works as an alias for `fam`. Ensemble started as shared state for a group of agents, held in a single audio file where every vote is a tone and the mix is the tally. That engine is still there (`ensemble.py`), next to the plain-markdown backend that Claude Code uses.</sub>
+<sub>Family Matters is built on **Ensemble**, a shared-state engine for groups of agents that started life as a single audio file where every vote is a tone and the mix is the tally. That's why the engine's files keep the name and `ens` still works.</sub>

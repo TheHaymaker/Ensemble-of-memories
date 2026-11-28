@@ -1,64 +1,51 @@
 # Family Matters
 
-Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family: it never
-forgets (until it represses), it brings up the past, what keeps proving useful becomes a blessing and a curse, and it hands its
-baggage and its generational trauma down to the next generation.
+Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family. For the overview, results and diagrams, see the [main README](../../README.md). This page is the reference.
 
-## Use it in Claude Code
+## Install
 
 ```bash
-cd packages/family-matters   # from a clone of this repo
-./install.sh --hook          # add --mcp to also register it as an MCP server
+./install.sh --hook          # from this folder; add --mcp to also register an MCP server
 ```
 
-This installs:
-- **the `fam` command** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`;
-- **skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night: dreams, poems, excursions), plus seven alias skills for the night named after other family sayings: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`;
-- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family gossip), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
+- **`fam`** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`.
+- **Skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night), plus seven aliases for the night: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`.
+- **With `--hook`**, a SessionStart hook that runs the briefing (`fam --listen`). Your `~/.claude/settings.json` is backed up and merged, not replaced.
 
-Then, in any project:
-- **Claude uses the skills by itself:** it catches up on the family gossip at the start of a task, never forgets decisions, brings up the past before re-deciding, and takes sides.
-- **`/thats-not-how-i-remember-it`** (or any of its aliases) runs a night, with Claude as the patient, the therapist, the poet and the runaway. `fam gossip` says when therapy is overdue.
-- **In your terminal:** `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help`.
+Claude then uses the skills on its own. Run a night when `fam gossip` says therapy is overdue.
 
-**Projects** are named after the folder Claude Code starts in, or `FAM_PROJECT`. Start a new project with `FAM_PARENTS=other-project` to make it a child of that project. Subagents pass `--agent builder` (or their own name) to act as other household members. Moving out (new generations) and adoption (kinship) are always your call: the skill tells Claude to ask you first.
+**Projects** are named after the folder Claude Code starts in, or `FAM_PROJECT`. `FAM_PARENTS=other-project` makes a new project a child of another. Subagents pass `--agent NAME`. Moving out and adoption are always your call: the skill tells Claude to ask you first.
 
-**Embeddings:** the default is keyword matching, which needs no setup. For meaning-based recall, set `FAM_EMBEDDER=hybrid` (keywords first, the local model2vec model's best guess when no keyword matches; about 30 MB), `model2vec` or `gemini` before a project's first use, and install that package into `~/.family-matters/venv`. A store keeps the embedder it was created with. On 15 labelled cues from real sessions, `hybrid` found 14, keywords 12 and model2vec alone 8 (`harness/recall_eval.py`).
+**Embeddings:** keyword matching by default, no setup. For meaning-based recall, set `FAM_EMBEDDER=hybrid` (keywords first, then a local model2vec model, about 30 MB), `model2vec` or `gemini` before a project's first use, and install that package into `~/.family-matters/venv`. On 15 labelled cues from real sessions, `hybrid` found 14, keywords 12 and model2vec alone 8.
 
-### What the family calls things
+**Upgrading from Ensemble:** re-run `./install.sh` with the same flags. It moves `~/.ensemble` to `~/.family-matters` (leaving a symlink), makes `ens` a shim for `fam`, swaps in the new skills and hook, and with `--mcp` re-registers the server as `family-matters`. Old command names and `ENSEMBLE_*` variables still work.
 
-| Family Matters | what it is | the engine's word (code, storage, docs below, old `ens` command) |
+## What the family calls things
+
+Storage and the engine docs below keep the engine's words, so nothing on disk changed in the rename.
+
+| command or name | what it is | engine's word |
 |---|---|---|
-| `fam gossip` | the session-start briefing | listen (`fam dinner` also still works) |
-| `fam never-forget "..."` | store a memory | remember |
+| `fam gossip` | the session-start briefing | listen |
+| `fam never-forget "..." [--replaces m00003]` | store a memory | remember |
 | `fam bring-up "..."` | search memory | recall |
-| `fam told-you-so m00012` | say a memory helped (strengthens it) | use-memory |
+| `fam told-you-so m00012` | a memory helped (strengthens it) | use-memory |
 | `fam revise-history OLD NEW` | a newer memory overturns an older one | replace-memory |
-| blessing-and-a-curse: `fam lessons`, `fam blessings`, `fam curses` (all the same command) | hardened knowledge that never fades | lessons |
-| repressed | faded out of the briefing, still searchable; a strong cue recovers it | dormant |
-| `fam vent "..."` / `fam eavesdrop builder` | your note / read another agent's | write-note / read-part |
+| `fam lessons` (or `blessings`, `curses`) | blessings-and-curses: hardened knowledge that never fades | lessons |
+| repressed | faded out of the briefing, still searchable | dormant |
+| `fam vent` / `fam eavesdrop builder` | your note / read another agent's | write-note / read-part |
 | `fam start-argument` / `take-sides` / `settle-argument` | a question the household votes on | open-question / vote / close-question |
 | `fam time-heals` | advance one beat | next-beat |
-| `/thats-not-how-i-remember-it` (aliases: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`) | a night (therapy): dreams, poems, excursions | a night, sleep (`/ensemble-night`) |
-| unsolicited advice (`fam take-advice s0004`) | what a parent or earlier generation knew | sayings (adopt-saying) |
-| baggage | specific memories handed down intact | heirlooms |
-| generational trauma: `fam generational-trauma`, `fam received-wisdom` (the same command) | sensitivity to a theme left by a big experience like a credential leak, lived or inherited | epigenetic marks |
+| `/thats-not-how-i-remember-it` | a night (therapy): dreams, poems, excursions | sleep |
+| `fam take-advice s0004` | adopt unsolicited advice from a relative | adopt-saying |
+| baggage | memories handed down intact | heirlooms |
+| `fam generational-trauma` (or `received-wisdom`) | inherited sensitivity to a theme | epigenetic marks |
 | family lore | a lesson several relatives learned on their own | family wisdom |
 | `fam thanksgiving` | the family reunion | family-reunion |
-| `fam move-out` / `fam stay-home` | accept or decline coming of age as a new generation | approve-generation / decline-generation |
-| `fam midlife-crisis "v2 rewrite"` | declare a milestone: come of age now | declare-milestone |
+| `fam move-out` / `fam stay-home` | accept or snooze a new generation | approve / decline-generation |
+| `fam midlife-crisis "v2 rewrite"` | declare a milestone now | declare-milestone |
 | `fam adopt other-project` | approve proposed kinship | approve-kin |
 | `fam tree` / `fam identity-crisis` | draw the family / where this project lives | family-tree / whoami |
-
-Storage keeps the engine's words, so nothing on disk changed in the rename.
-
-### Upgrading from Ensemble
-
-Re-run `./install.sh` (with the same flags). It moves `~/.ensemble` to `~/.family-matters` and leaves a
-symlink behind, turns `ens` into a shim for `fam`, swaps the `ensemble`/`ensemble-night` skills for the
-new ones, rewrites the SessionStart hook to `fam --listen`, and with `--mcp` re-registers the MCP server
-as `family-matters`. Until you re-run it, an old `~/.ensemble` keeps being used. Every old command name
-(`ens listen`, `ens remember`, `ens lessons`, ...) and every `ENSEMBLE_*` variable still works.
 
 ## Under the hood: the Ensemble engine
 
@@ -232,7 +219,7 @@ A judge gives each pair one outcome:
 | reinforce | both decay slower; a dormant duplicate is merged into its partner |
 | add | a new link, stored as an unconfirmed idea |
 | qualify | both are right under different conditions: both kept at full strength, linked to a memory naming when each applies |
-| substitute / subtract | the newer replaces or contradicts the older, which is cut to 30% and marked outdated |
+| substitute / subtract | the newer replaces or contradicts the older, which is cut to 30% and marked outdated (a replaced memory is no longer briefed or handed down) |
 | tension | an unclear conflict: stored, and raised as an Ensemble vote by the conductor; yes keeps the first memory, no the second, split keeps both |
 
 **Trust rules:**
