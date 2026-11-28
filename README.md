@@ -30,14 +30,14 @@ memory: 2 active, 0 repressed, 0 blessings-and-curses
 ## Install
 
 ```bash
-git clone https://github.com/TheHaymaker/Ensemble-of-memories
-cd Ensemble-of-memories/packages/family-matters
+git clone https://github.com/TheHaymaker/family-matters
+cd family-matters/packages/family-matters
 ./install.sh --hook          # add --mcp to also register an MCP server
 ```
 
 You get the `fam` command, the `family-matters` and `thats-not-how-i-remember-it` skills, and a SessionStart hook that runs the briefing. Your `~/.claude/settings.json` is backed up and merged. Then just work: Claude uses the skills on its own. From a terminal, try `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help`.
 
-Coming from Ensemble? Re-run `./install.sh`. Your memory moves over and every `ens` command still works. The [package README](packages/family-matters/README.md) has every command and what the family calls things.
+The [package README](packages/family-matters/README.md) has every command and what the family calls things.
 
 ## How it works
 
@@ -131,7 +131,7 @@ Anything a night invents is labelled *imagined* and stays an idea until a waking
 
 This repo is also a lab: `harness/lab.py` runs headless Claude sessions against the [test projects](test-projects) and records what memory looked like after every step.
 
-The recall A/B ([PR #9](https://github.com/TheHaymaker/Ensemble-of-memories/pull/9)) built a history of decisions on a recipe project, then gave fresh sessions new tasks with and without memory (3 reps each, checks plus a blind judge):
+The recall A/B ([PR #9](https://github.com/TheHaymaker/family-matters/pull/9)) built a history of decisions on a recipe project, then gave fresh sessions new tasks with and without memory (3 reps each, checks plus a blind judge):
 
 | | with memory | without |
 |---|---|---|
@@ -161,4 +161,3 @@ python3 harness/lab.py play smoke2 harness/scenarios/smoke.json           # real
 
 Tests: `cd packages/family-matters && python3 test_claude_code.py` (and the other `test_*.py`).
 
-<sub>Family Matters is built on **Ensemble**, a shared-state engine for groups of agents that started life as a single audio file where every vote is a tone and the mix is the tally. That's why the engine's files keep the name and `ens` still works.</sub>

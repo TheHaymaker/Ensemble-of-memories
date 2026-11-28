@@ -18,7 +18,7 @@ Claude then uses the skills on its own. Run a night when `fam gossip` says thera
 
 **Embeddings:** keyword matching by default, no setup. For meaning-based recall, set `FAM_EMBEDDER=hybrid` (keywords first, then a local model2vec model, about 30 MB), `model2vec` or `gemini` before a project's first use, and install that package into `~/.family-matters/venv`. On 15 labelled cues from real sessions, `hybrid` found 14, keywords 12 and model2vec alone 8.
 
-**Upgrading from Ensemble:** re-run `./install.sh` with the same flags. It moves `~/.ensemble` to `~/.family-matters` (leaving a symlink), makes `ens` a shim for `fam`, swaps in the new skills and hook, and with `--mcp` re-registers the server as `family-matters`. Old command names and `ENSEMBLE_*` variables still work.
+**Upgrading an old `ens` install:** re-run `./install.sh` with the same flags. It moves `~/.ensemble` to `~/.family-matters` (leaving a symlink), makes `ens` a shim for `fam`, swaps in the new skills and hook, and with `--mcp` re-registers the server as `family-matters`. Old command names and `ENSEMBLE_*` variables still work.
 
 ## What the family calls things
 
@@ -47,10 +47,10 @@ Storage and the engine docs below keep the engine's words, so nothing on disk ch
 | `fam adopt other-project` | approve proposed kinship | approve-kin |
 | `fam tree` / `fam identity-crisis` | draw the family / where this project lives | family-tree / whoami |
 
-## Under the hood: the Ensemble engine
+## Under the hood: the shared-score engine
 
-Family Matters is built on **Ensemble**, which is why the engine's files and classes (`ensemble.py`,
-`MdEnsemble`, `tools.Player`) keep that name and the sections below use its vocabulary.
+The engine keeps its original file and class names (`ensemble.py`, `MdEnsemble`, `tools.Player`),
+and the sections below use its vocabulary.
 
 Shared state for a multi-agent system, held in **one fixed-size WAV file** (196,652 bytes, 2.05 s, 48 kHz mono 16-bit). It holds up to 9 agents and 32 open questions. The file never grows.
 
@@ -81,7 +81,7 @@ bins 80-457   PARTS   one OFDM band per agent (QPSK, zlib, CRC32), 953 compresse
 | `tools.py` | `Player`: the LLM-facing tools (`listen`, `read_part`, `write_note`, `vote`, `withdraw`, `audit`, plus `open_question`, `close_question`, `next_beat` for the conductor) |
 | `test_ensemble.py` | 9 robustness tests |
 | `simulate.py` | 60-beat benchmark against a message thread and markdown files (`python3 simulate.py out md` for the markdown backend) |
-| `mdensemble.py` | the same protocol on plain markdown files, with fade computed at read time, and `export_wav()` to render the state as an Ensemble WAV |
+| `mdensemble.py` | the same protocol on plain markdown files, with fade computed at read time, and `export_wav()` to render the state as a WAV |
 | `test_md.py` | the same 9 tests on the markdown backend, plus export through MP3 |
 | `memory.py`, `test_memory.py` | tiered memory store with dormancy, revival and buffs |
 | `embeddings.py`, `calibrate.py`, `test_integration.py` | embedder adapters, threshold calibration, end-to-end tests |
@@ -126,7 +126,7 @@ agents = [Agent(name=n, model="gemini-2.5-flash", tools=Player(mix, n).tools(),
 |---|---|---|
 | message thread | 19,390 | 78 KB and growing |
 | markdown files (read when changed) | 25,976 | 2.9 KB, flat |
-| **Ensemble** | **4,648** | 196.7 KB, fixed |
+| **shared score (audio)** | **4,648** | 196.7 KB, fixed |
 
 Verdicts read from the score matched the ledger at all 120 checks. The audit caught the faulty agent the beat it acted.
 
@@ -138,8 +138,8 @@ Verdicts read from the score matched the ledger at all 120 checks. The audit cau
 |---|---|---|---|---|
 | message thread | 19,390 | 78 KB, growing | | |
 | plain markdown files | 25,976 | 2.9 KB | | |
-| Ensemble, audio | 4,648 | 196.7 KB, fixed | 1-3 ms | 9 agents, 32 questions, 953 B parts |
-| **Ensemble, markdown** | **4,613** | **3.4 KB, bounded** | **0.2-0.4 ms** | any agents, ~125 questions per 4 KB conductor file |
+| shared score, audio | 4,648 | 196.7 KB, fixed | 1-3 ms | 9 agents, 32 questions, 953 B parts |
+| **shared score, markdown** | **4,613** | **3.4 KB, bounded** | **0.2-0.4 ms** | any agents, ~125 questions per 4 KB conductor file |
 
 Markdown tallies are exact (no 0.001 grid), merges are exact, and the files can be read and diffed. Instead of the audio-style audit, the markdown audit checks that `score.md` still matches the parts it was built from, so a hand-edited summary is caught.
 
@@ -165,7 +165,7 @@ A memory store on plain files with four tiers. Strength fades each beat at the t
 
 `test_memory.py` runs 6 tests and draws `memory_life.png` (300 beats, four example memories, tier counts against summary size). With 2,000 memories over 500 beats, the summary stayed under about 200 tokens while 1,425 memories sat dormant on disk.
 
-## Embeddings and the Ensemble connection
+## Embeddings and per-agent memory
 
 ```python
 from embeddings import GeminiEmbedder          # or Model2VecEmbedder(), SentenceTransformerEmbedder()
@@ -179,10 +179,10 @@ players = {n: Player(mix, n, memory=MemoryStore(f"memory/{n}", emb)) for n in mi
 tools = players["conductor"].tools()           # 12 tools for the conductor, 9 for the others
 ```
 
-- **Each agent has private memory.** `listen()` adds its 5 strongest memories under the ensemble summary.
+- **Each agent has private memory.** `listen()` adds its 5 strongest memories under the shared summary.
 - **Memory tools:** `remember`, `recall` (search by meaning; a strong, close cue revives dormant memories) and `use_memory`.
 - **Decisions become memories.** When the conductor closes a question, the verdict is stored in its memory, weighted by how clear the vote was.
-- **One clock.** Memory fades on the ensemble's beat.
+- **One clock.** Memory fades on the score's beat.
 - **Embedding calls never hold the lock.** Text is embedded before the store is locked, so a slow API call doesn't block other agents.
 - **A store keeps its embedder.** Opening it with a different one is refused, since the vectors wouldn't be comparable.
 
@@ -220,7 +220,7 @@ A judge gives each pair one outcome:
 | add | a new link, stored as an unconfirmed idea |
 | qualify | both are right under different conditions: both kept at full strength, linked to a memory naming when each applies |
 | substitute / subtract | the newer replaces or contradicts the older, which is cut to 30% and marked outdated (a replaced memory is no longer briefed or handed down) |
-| tension | an unclear conflict: stored, and raised as an Ensemble vote by the conductor; yes keeps the first memory, no the second, split keeps both |
+| tension | an unclear conflict: stored, and raised as a vote by the conductor; yes keeps the first memory, no the second, split keeps both |
 
 **Trust rules:**
 - **Dream ideas need confirmation.** A dream-made idea can't overrule a waking memory; the attempt becomes a tension instead. After 2 waking uses, the idea counts as confirmed.
