@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Family Matters: memory for Claude Code that fades, dreams and runs in the family" width="640">
+  <img src="assets/banner.svg" alt="Family Matters: memory for Claude Code that fades, dreams and runs in the family" width="720">
 </p>
 
 <p align="center">
@@ -42,6 +42,7 @@ The [package README](packages/family-matters/README.md) has every command and wh
 ## How it works
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#FFE9A8','primaryBorderColor':'#2A1A06','primaryTextColor':'#1F2A44','lineColor':'#3E8C95','secondaryColor':'#CFE6E8','tertiaryColor':'#E8EEF7','edgeLabelBackground':'#FFF7E0','fontFamily':'Georgia, serif'}}}%%
 flowchart LR
     S([Session starts]) -->|SessionStart hook| L["fam gossip<br/><i>briefing: strongest memories,<br/>blessings-and-curses, family advice</i>"]
     L --> W[Claude works on the task]
@@ -62,6 +63,7 @@ The briefing holds only the strongest active memories, so it stays around 200 to
 Every memory fades a little each beat. Using it slows the fade and moves it up a tier. Memories nobody uses are repressed: out of the briefing, but still searchable.
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#FFE9A8','primaryBorderColor':'#2A1A06','primaryTextColor':'#1F2A44','lineColor':'#3E8C95','secondaryColor':'#CFE6E8','tertiaryColor':'#E8EEF7','edgeLabelBackground':'#FFF7E0','fontFamily':'Georgia, serif'}}}%%
 stateDiagram-v2
     direction LR
     state "Blessing and a curse" as Blessing
@@ -93,6 +95,7 @@ Each use also raises a memory's floor, so one used about 7 times is never repres
 Related projects form a family. What passes between them is advice and temperament, never rules.
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#FFE9A8','primaryBorderColor':'#2A1A06','primaryTextColor':'#1F2A44','lineColor':'#3E8C95','secondaryColor':'#CFE6E8','tertiaryColor':'#E8EEF7','edgeLabelBackground':'#FFF7E0','fontFamily':'Georgia, serif'}}}%%
 flowchart TB
     RC["recipe-core"] -->|advice, baggage,<br/>traits, generational trauma| MP["meal-planner"]
     RC --> PT["pantry-tracker"]
@@ -106,6 +109,7 @@ flowchart TB
 - **Generational trauma.** A big experience, like a credential leak, leaves a lasting sensitivity to that theme. It passes down at half strength per generation, fades in a calm life, and comes back at full strength after a similar experience. See it with `fam generational-trauma`.
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#FFE9A8','primaryBorderColor':'#2A1A06','primaryTextColor':'#1F2A44','lineColor':'#3E8C95','secondaryColor':'#CFE6E8','tertiaryColor':'#E8EEF7','edgeLabelBackground':'#FFF7E0','fontFamily':'Georgia, serif'}}}%%
 flowchart LR
     E(["a credential leak"]) -->|"generational trauma(theme), strength 1.0"| G["grandparent"]
     G -->|"passes on at half strength"| P["parent: 0.5"]

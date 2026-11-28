@@ -1,3 +1,5 @@
+<img src="../../assets/logo.svg" alt="Family Matters logo" width="96" align="right">
+
 # Family Matters
 
 Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family. For the overview, results and diagrams, see the [main README](../../README.md). This page is the reference.
