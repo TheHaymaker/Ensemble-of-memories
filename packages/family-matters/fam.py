@@ -4,6 +4,7 @@
     fam mcp        claude mcp add --transport stdio --scope user family-matters -- fam mcp
 
 Every family has its memories, its baggage and its unresolved trauma. This one is yours.
+Nights run through the /thats-not-how-i-remember-it skill (seven other family sayings are aliases).
 
 Layout (FAM_HOME, default ~/.family-matters):
     family/                         the family: tree, traits, inherited trauma, advice, baggage, lore
@@ -74,7 +75,7 @@ SLEEP_AT = int(env("SLEEP_AT", "30"))
 WEAVE = env("WEAVE", "0") != "0"
 POEM_LENS = env("POEM_LENS", "0") != "0"
 EXCURSIONS = int(env("EXCURSIONS", "1"))
-THERAPY = "/family-therapy"
+THERAPY = "/thats-not-how-i-remember-it"
 
 
 def _seed(step):
@@ -332,7 +333,7 @@ def take_advice(saying_id: str) -> str:
 @tool
 def dream_pairs(agent: str = "conductor", cycles: int = 4, pairs_per_cycle: int = 12) -> str:
     """Therapy, step 1: the memory pairs tonight's session will replay, for you to judge. Answer each
-    with dream_apply. Run through the /family-therapy skill."""
+    with dream_apply. Run through the /thats-not-how-i-remember-it skill."""
     def go():
         seed = _seed(1)
         seen = []
@@ -575,7 +576,7 @@ def serve_mcp():
         "Family Matters: this project's long-lived memory. Call dinner first in a task (the briefing). "
         "never_forget what is worth keeping (with replaces=<old id> when it overturns an earlier memory); "
         "bring_up before re-deciding something; told_you_so when you relied on a memory; take_sides on "
-        "open arguments. When dinner says therapy is overdue, run the /family-therapy skill."))
+        "open arguments. When dinner says therapy is overdue, run the /thats-not-how-i-remember-it skill (a night)."))
     for fn in COMMANDS.values():
         server.tool()(fn)
     server.run("stdio")

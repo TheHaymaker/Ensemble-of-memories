@@ -10,7 +10,7 @@
 Step by step:
     new RUN [--projects a,b] [--env K=V]...             make runs/RUN: frozen code copy, work copies, empty home
     session RUN PROJECT TASK_ID [--prompt "..."]        one headless Claude session on one task
-    night RUN PROJECT                                    one headless /family-therapy (a night)
+    night RUN PROJECT                                    one headless /thats-not-how-i-remember-it (a night)
     reunion RUN | milestone RUN PROJECT "note" | approve-generation RUN PROJECT
     fam RUN PROJECT -- <fam args>                        run `fam` as that project, in that run's home (alias: ens)
     claude RUN PROJECT                                   open an interactive Claude in that project, same setup
@@ -58,7 +58,7 @@ INHERITED_DROP = ("CLAUDE_MEMORY_STORES", "CLAUDE_COWORK_MEMORY_PATH_OVERRIDE", 
                   # set when the harness itself runs inside a cloud Claude session; with them, project
                   # hooks (the SessionStart `fam --listen`) silently don't run
                   "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_IGNORE_PERSISTED_TRUST")
-NIGHT_PROMPT = "Run the family-therapy skill now: dreams, poems and excursions. Then summarize what changed."
+NIGHT_PROMPT = "Run the thats-not-how-i-remember-it skill now: dreams, poems and excursions. Then summarize what changed."
 
 
 # ------------------------------------------------------------------ helpers
@@ -214,7 +214,7 @@ def new_run(name, projects=None, env=None, scenario=None):
     for p in projects:
         dst = os.path.join(r.work, p)
         shutil.copytree(os.path.join(TEST_PROJECTS, p), dst, ignore=shutil.ignore_patterns("tasks.json", "__pycache__"))
-        for s in ("family-matters", "family-therapy"):
+        for s in os.listdir(os.path.join(r.app, "claude", "skills")):
             os.makedirs(os.path.join(dst, ".claude", "skills", s))
             shutil.copy(os.path.join(r.app, "claude", "skills", s, "SKILL.md"), os.path.join(dst, ".claude", "skills", s))
         settings = {

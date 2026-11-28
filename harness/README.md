@@ -36,7 +36,7 @@ A scenario is JSON: `projects` (default all), `env` (e.g. `FAM_SLEEP_AT`), `nudg
 |---|---|
 | `{"do": "session", "project": p, "task": id}` or `"prompt": "..."` | one headless Claude session |
 | `{"do": "sessions", "project": p, "tasks": "all" \| [ids]}` | one session per task, in order |
-| `{"do": "night", "project": p}` | Claude runs the `family-therapy` skill (a night) |
+| `{"do": "night", "project": p}` | Claude runs the `thats-not-how-i-remember-it` skill (a night) |
 | `{"do": "reunion"}` | `fam thanksgiving` (the family reunion) |
 | `{"do": "milestone", "project": p, "note": "..."}` | `fam midlife-crisis`: p comes of age as p@2 |
 | `{"do": "approve-generation", "project": p}` | `fam move-out`: approve a pending coming-of-age suggestion |

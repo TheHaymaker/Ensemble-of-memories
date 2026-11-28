@@ -19,7 +19,7 @@
 - **What makes it different:**
   - **[Decay](#decay-forgetting-on-purpose).** Memories fade unless they're used, get repressed, and can be recovered. What keeps proving useful hardens into a **blessing-and-a-curse** that never fades (`fam lessons`, `fam blessings` or `fam curses` lists them). The briefing stays around 200 tokens however much is stored.
   - **[Generations and epigenetics](#generations-and-epigenetics).** Related projects form a family. Children are born hearing their parents' best-tested knowledge as unsolicited advice, inherit their temperament as traits, and carry big experiences (like a credential leak) as inherited **trauma** that weakens with each generation. A project that outgrows its world moves out as a new generation.
-  - **[Family therapy](#family-therapy).** Dreams revisit and reconcile memories while Claude sleeps on it.
+  - **[Nights: "That's not how I remember it"](#nights-thats-not-how-i-remember-it).** Dreams revisit and reconcile memories while Claude sleeps on it.
 - **Install:** `cd packages/family-matters && ./install.sh --hook`. No API keys, no server, plain files in `~/.family-matters`.
 
 ```console
@@ -42,10 +42,10 @@ cd ensemble-of-memories/packages/family-matters
 This installs:
 
 - **the `fam` command** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`;
-- **two skills** in `~/.claude/skills`: `family-matters` (everyday use) and `family-therapy` (dreams, poems, excursions);
+- **skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night: dreams, poems, excursions), with seven aliases for the night named after other family sayings;
 - **with `--hook`, a SessionStart hook** that runs `fam --listen` (family dinner), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
 
-Then just work. Claude uses the skills by itself. Run `/family-therapy` when `fam dinner` says therapy is overdue, and use `fam dinner`, `fam bring-up "..."`, `fam tree` and `fam help` from your terminal. The full guide, with every command and what the family calls things, is in [`packages/family-matters/README.md`](packages/family-matters/README.md).
+Then just work. Claude uses the skills by itself. Run `/thats-not-how-i-remember-it` when `fam dinner` says therapy is overdue, and use `fam dinner`, `fam bring-up "..."`, `fam tree` and `fam help` from your terminal. The full guide, with every command and what the family calls things, is in [`packages/family-matters/README.md`](packages/family-matters/README.md).
 
 **Coming from Ensemble?** Re-run `./install.sh`. It moves `~/.ensemble` to `~/.family-matters`, keeps `ens` working as a shim for `fam`, and swaps in the new skills and hook. Old command names (`ens listen`, `ens remember`, `ens lessons`) and `ENSEMBLE_*` variables still work.
 
@@ -69,14 +69,14 @@ flowchart LR
 
 The briefing stays small (about 150 to 200 tokens of memory) however much the project has stored, because only the strongest active memories make it in.
 
-### Family therapy
+### Nights: "That's not how I remember it"
 
-When enough unprocessed memories have piled up, `fam dinner` says therapy is overdue and `/family-therapy` runs a night of it. Claude plays every part. Each step is a two-step exchange: `fam` proposes, Claude answers, and `fam` applies the answers.
+When enough unprocessed memories have piled up, `fam dinner` says therapy is overdue and `/thats-not-how-i-remember-it` runs a night. Every family saying that describes a night works too: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`. Claude plays every part. Each step is a two-step exchange: `fam` proposes, Claude answers, and `fam` applies the answers.
 
 ```mermaid
 flowchart TB
     due{{"fam dinner: therapy is overdue"}} --> D
-    subgraph night ["/family-therapy"]
+    subgraph night ["/thats-not-how-i-remember-it"]
         direction TB
         D["<b>Dreams</b><br/>pairs new memories with older and repressed ones.<br/>Claude judges: reinforce, link, qualify,<br/>replace, contradict, or flag a tension"]
         P["<b>Poems</b><br/>one-line figures from unrelated memories,<br/>plus probes on where a blessing-and-a-curse stops holding"]

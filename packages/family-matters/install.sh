@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Install Family Matters for Claude Code.
-#   ./install.sh            the `fam` command and the two skills (family-matters, family-therapy)
+#   ./install.sh            the `fam` command and the skills (family-matters, and the night: thats-not-how-i-remember-it
+#                           plus seven alias skills named after other family sayings)
 #   ./install.sh --hook     also: family dinner (`fam --listen`) at the start of every Claude Code session
 #   ./install.sh --mcp      also: register `fam mcp` as an MCP server (user scope)
 # Re-run any time to update. Nothing outside ~/.family-matters, ~/.local/bin/{fam,ens} and ~/.claude is touched.
@@ -68,13 +69,14 @@ exec "$BIN/fam" "\$@"
 EOF
 chmod +x "$BIN/fam" "$BIN/ens"
 
-echo "-> skills in $SKILLS (family-matters, family-therapy)"
-for s in family-matters family-therapy; do
+echo "-> skills in $SKILLS (family-matters, thats-not-how-i-remember-it and its aliases)"
+for d in "$SRC"/claude/skills/*/; do
+  s="$(basename "$d")"
   mkdir -p "$SKILLS/$s"
-  cp "$SRC/claude/skills/$s/SKILL.md" "$SKILLS/$s/SKILL.md"
+  cp "$d/SKILL.md" "$SKILLS/$s/SKILL.md"
 done
-for s in ensemble ensemble-night; do                # the old skills, if Ensemble installed them
-  if [ -f "$SKILLS/$s/SKILL.md" ] && grep -q '^allowed-tools: Bash(ens \*)' "$SKILLS/$s/SKILL.md"; then
+for s in ensemble ensemble-night family-therapy; do  # old skills, if an earlier version installed them
+  if [ -f "$SKILLS/$s/SKILL.md" ] && grep -Eq '^allowed-tools: Bash\((ens|fam) \*\)' "$SKILLS/$s/SKILL.md"; then
     echo "-> removing old skill $s"
     rm -rf "${SKILLS:?}/$s"
   fi

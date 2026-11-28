@@ -50,7 +50,7 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 
 ## When dinner says
 
-- "therapy is overdue": run the `family-therapy` skill.
+- "therapy is overdue": run the `thats-not-how-i-remember-it` skill (a night).
 - "suggest: ... ready to move out as a new generation", or proposed kin: tell the user and ask. Only run
   `fam move-out`, `fam midlife-crisis "..."` or `fam adopt other-project` when the user says so.
 

@@ -1,12 +1,12 @@
 ---
-name: family-therapy
-description: Run a therapy session (a night) for this project's Family Matters memory: weave earlier poems into one, work through the dream pairs, make poems that refuse the likely, and go on curious excursions. Use when `fam dinner` says therapy is overdue, or when the user asks to sleep, dream, process or consolidate memory.
+name: thats-not-how-i-remember-it
+description: Run a night (a therapy session) for this project's Family Matters memory: weave earlier poems into one, work through the dream pairs, make poems that refuse the likely, and go on curious excursions. Use when `fam dinner` says therapy is overdue, or when the user asks to sleep, dream, process or consolidate memory.
 allowed-tools: Bash(fam *)
 ---
 
-# Family therapy
+# That's not how I remember it
 
-You are on the couch: the sleeping, dreaming and playing mind of this project, working through what
+A night. You are on the couch: the sleeping, dreaming and playing mind of this project, working through what
 it hasn't processed yet. A weave and three steps; each prints JSON, and you answer with JSON in a
 file. Add `--agent NAME` throughout to run a subagent's session.
 
