@@ -5,7 +5,7 @@
 <p align="center">
   <b>Long-lived, per-project memory for Claude Code.</b><br>
   It never forgets what was decided and why, represses what stops mattering,<br>
-  hardens what keeps proving useful into a blessing and a curse, and hands its trauma down to the projects that come after.
+  hardens what keeps proving useful into a blessing and a curse, and hands its generational trauma down to the projects that come after.
 </p>
 
 ---
@@ -18,7 +18,7 @@
 - **What it costs:** about a third more turns per session and roughly 6% more spend in that test.
 - **What makes it different:**
   - **[Decay](#decay-forgetting-on-purpose).** Memories fade unless they're used, get repressed, and can be recovered. What keeps proving useful hardens into a **blessing-and-a-curse** that never fades (`fam lessons`, `fam blessings` or `fam curses` lists them). The briefing stays around 200 tokens however much is stored.
-  - **[Generations and epigenetics](#generations-and-epigenetics).** Related projects form a family. Children are born hearing their parents' best-tested knowledge as unsolicited advice, inherit their temperament as traits, and carry big experiences (like a credential leak) as inherited **trauma** that weakens with each generation. A project that outgrows its world moves out as a new generation.
+  - **[Generations and epigenetics](#generations-and-epigenetics).** Related projects form a family. Children are born hearing their parents' best-tested knowledge as unsolicited advice, inherit their temperament as traits, and carry big experiences (like a credential leak) as inherited **generational trauma** that weakens with each generation. A project that outgrows its world moves out as a new generation.
   - **[Nights: "That's not how I remember it"](#nights-thats-not-how-i-remember-it).** Dreams revisit and reconcile memories while Claude sleeps on it.
 - **Install:** `cd packages/family-matters && ./install.sh --hook`. No API keys, no server, plain files in `~/.family-matters`.
 
@@ -132,7 +132,7 @@ Projects form families. Each project keeps its own memory, and what passes betwe
 
 ```mermaid
 flowchart TB
-    RC["recipe-core"] -->|advice, baggage,<br/>traits, trauma| MP["meal-planner"]
+    RC["recipe-core"] -->|advice, baggage,<br/>traits, generational trauma| MP["meal-planner"]
     RC --> PT["pantry-tracker"]
     MP --> GB["grocery-bot"]
     RC -. moves out .-> RC2["recipe-core@2"]
@@ -143,11 +143,11 @@ flowchart TB
 
 **Traits.** Curiosity, skepticism, steadiness and expressiveness are read from how each project actually lived, and they tune its settings: excursions per night, how high the dream judge's bar is, how many uses it takes to confirm an idea or form a blessing-and-a-curse. A child starts from a blend of its relatives' traits (parent 1, grandparent 0.5, sibling 0.3, aunt or uncle 0.15), and its own experience takes over as it lives.
 
-**Generational trauma (epigenetic marks).** A big experience, like a credential leak, leaves **trauma**: heightened sensitivity to that theme, so related memories count for more. Like all good trauma, it gets passed down. `fam trauma` lists it (so do `fam generational-trauma`, `fam wisdom` and `fam received-wisdom`).
+**Generational trauma (epigenetic marks).** A big experience, like a credential leak, leaves **generational trauma**: heightened sensitivity to that theme, so related memories count for more. Like all good trauma, it gets passed down. `fam generational-trauma` (or `fam received-wisdom`) lists it.
 
 ```mermaid
 flowchart LR
-    E(["a credential leak"]) -->|"trauma(theme), strength 1.0"| G["grandparent"]
+    E(["a credential leak"]) -->|"generational trauma(theme), strength 1.0"| G["grandparent"]
     G -->|"passes on at half strength"| P["parent: 0.5"]
     P -->|"half again"| C["child: 0.25"]
     P -. "a calm life fades it<br/>by 0.85 per night" .-> P

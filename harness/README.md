@@ -51,7 +51,7 @@ sessions and 7 nights), `many-nights` (for `--fake`: enough repetition to reach 
 
 A project joins the family at its first step, and its parents (from
 `test-projects/family.json`) join first. Order in the scenario is therefore order of birth: a
-child born after its parent has lived inherits the parent's traits and trauma (marks) as they are then.
+child born after its parent has lived inherits the parent's traits and generational trauma (marks) as they are then.
 `FAM_PARENTS` only matters at that first join, which is why the harness controls it.
 
 ## `--fake`

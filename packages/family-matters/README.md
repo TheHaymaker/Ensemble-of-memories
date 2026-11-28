@@ -2,7 +2,7 @@
 
 Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family: it never
 forgets (until it represses), it brings up the past, what keeps proving useful becomes a blessing and a curse, and it hands its
-baggage and its trauma down to the next generation.
+baggage and its generational trauma down to the next generation.
 
 ## Use it in Claude Code
 
@@ -42,7 +42,7 @@ Then, in any project:
 | `/thats-not-how-i-remember-it` (aliases: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`) | a night (therapy): dreams, poems, excursions | a night, sleep (`/ensemble-night`) |
 | unsolicited advice (`fam take-advice s0004`) | what a parent or earlier generation knew | sayings (adopt-saying) |
 | baggage | specific memories handed down intact | heirlooms |
-| trauma: `fam trauma`, `fam generational-trauma`, `fam wisdom`, `fam received-wisdom` (all the same command) | sensitivity to a theme left by a big experience like a credential leak, lived or inherited | epigenetic marks |
+| generational trauma: `fam generational-trauma`, `fam received-wisdom` (the same command) | sensitivity to a theme left by a big experience like a credential leak, lived or inherited | epigenetic marks |
 | family lore | a lesson several relatives learned on their own | family wisdom |
 | `fam thanksgiving` | the family reunion | family-reunion |
 | `fam move-out` / `fam stay-home` | accept or decline coming of age as a new generation | approve-generation / decline-generation |
@@ -99,7 +99,7 @@ bins 80-457   PARTS   one OFDM band per agent (QPSK, zlib, CRC32), 953 compresse
 | `memory.py`, `test_memory.py` | tiered memory store with dormancy, revival and buffs |
 | `embeddings.py`, `calibrate.py`, `test_integration.py` | embedder adapters, threshold calibration, end-to-end tests |
 | `dreams.py`, `poets.py`, `explorers.py`, `test_sleep.py`, `test_lessons.py`, `test_poems.py`, `test_excursions.py` | dream judges, poets, explorers and their tests |
-| `family.py`, `family_view.py`, `test_family.py`, `test_generations.py` | families of projects: traits, marks (trauma), sayings (advice), heirlooms (baggage), reunions, coming of age, kinship |
+| `family.py`, `family_view.py`, `test_family.py`, `test_generations.py` | families of projects: traits, marks (generational trauma), sayings (advice), heirlooms (baggage), reunions, coming of age, kinship |
 | `fam.py`, `install.sh`, `claude/skills/*`, `test_claude_code.py` | Claude Code: the `fam` command and MCP mode, installer, skills, tests |
 | `compare.py` | runs the benchmark on both backends and draws `head_to_head.png` |
 

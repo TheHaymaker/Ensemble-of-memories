@@ -7,7 +7,7 @@ Every family has its memories, its baggage and its unresolved trauma. This one i
 Nights run through the /thats-not-how-i-remember-it skill (seven other family sayings are aliases).
 
 Layout (FAM_HOME, default ~/.family-matters):
-    family/                         the family: tree, traits, inherited trauma, advice, baggage, lore
+    family/                         the family: tree, traits, generational trauma, advice, baggage, lore
     projects/<member>/state/        that project's household (notes, arguments, who sided with whom)
     projects/<member>/memory/<agent>/   each agent's own tiered memory
 
@@ -311,16 +311,16 @@ def lessons(agent: str = "conductor") -> str:
 
 
 @tool
-def trauma() -> str:
-    """List this project's trauma: big experiences (like a credential leak) that heightened its sensitivity to
+def generational_trauma() -> str:
+    """List this project's generational trauma: big experiences (like a credential leak) that heightened its sensitivity to
     a theme, lived or inherited from its ancestors at half strength per generation, fading over calm nights.
-    Also: fam generational-trauma, fam wisdom, fam received-wisdom."""
+    Also: fam received-wisdom."""
     def go():
         m, f = member(), family()
         marks = f.effective_marks(m)
         if not marks:
-            return "no trauma (yet)"
-        return "\n".join(f"trauma: {k['theme']} {k['strength']:.2f} ({'lived' if k['own'] else 'inherited'})" for k in marks)
+            return "no generational trauma (yet)"
+        return "\n".join(f"generational trauma: {k['theme']} {k['strength']:.2f} ({'lived' if k['own'] else 'inherited'})" for k in marks)
     return _safe(go)
 
 
@@ -588,7 +588,7 @@ ALIASES = {"listen": "dinner", "read_part": "eavesdrop", "write_note": "vent", "
            "open_question": "start_argument", "close_question": "settle_argument", "next_beat": "time_heals",
            "remember": "never_forget", "replace_memory": "revise_history", "recall": "bring_up",
            "use_memory": "told_you_so", "blessings": "lessons", "curses": "lessons", "blessing_and_a_curse": "lessons",
-           "generational_trauma": "trauma", "wisdom": "trauma", "received_wisdom": "trauma", "adopt_saying": "take_advice",
+           "received_wisdom": "generational_trauma", "adopt_saying": "take_advice",
            "family_tree": "tree", "approve_generation": "move_out", "decline_generation": "stay_home",
            "declare_milestone": "midlife_crisis", "approve_kin": "adopt", "family_reunion": "thanksgiving",
            "whoami": "identity_crisis", "reunion": "thanksgiving"}
@@ -603,7 +603,7 @@ USAGE = """fam: Family Matters, this project's long-lived memory (and its unreso
   fam dream-pairs | fam dream-apply --file .fam-answer.json        (therapy: Claude judges)
   fam poem-weave  | fam weave-apply --file ...   (therapy: older figures woven into one poem)
   fam poem-pairs  | fam poem-apply --file ...   fam excursion-seeds | fam excursion-apply --file ...
-  fam trauma (or generational-trauma, wisdom, received-wisdom)   fam take-advice s0004 (or baggage h0005)
+  fam generational-trauma (or received-wisdom)   fam take-advice s0004 (or baggage h0005)
   fam tree   fam thanksgiving   fam identity-crisis
   fam move-out | fam stay-home   fam midlife-crisis "v2 rewrite"   fam adopt other-project
   fam mcp                                  run as an MCP server instead

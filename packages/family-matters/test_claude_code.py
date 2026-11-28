@@ -189,7 +189,7 @@ def test_mcp_mode():
                 res = await s.call_tool("dinner", {})
                 return tools, res.content[0].text
     tools, heard = anyio.run(go)
-    assert {"dinner", "never_forget", "bring_up", "told_you_so", "lessons", "trauma", "dream_pairs", "dream_apply", "tree"} <= set(tools)
+    assert {"dinner", "never_forget", "bring_up", "told_you_so", "lessons", "generational_trauma", "dream_pairs", "dream_apply", "tree"} <= set(tools)
     assert "deploys go out on tuesdays" in heard
     return f"an MCP client listed {len(tools)} tools, stored a memory and heard it back"
 
@@ -223,20 +223,22 @@ def test_old_ensemble_names_still_work():
     assert where().startswith(os.path.join(home, ".family-matters", ""))
     return "ens-era commands, ENSEMBLE_* variables, .ensemble-answer.json and an unmigrated ~/.ensemble all still work"
 
-def test_lessons_and_trauma_answer_to_several_names():
+def test_lessons_and_generational_trauma_answer_to_several_names():
     """Lessons (blessings-and-curses) answer to lessons, blessings, curses and blessing-and-a-curse;
-    inherited marks (trauma) to trauma, generational-trauma, wisdom and received-wisdom."""
+    inherited marks (generational trauma) to generational-trauma and received-wisdom; bare trauma
+    and wisdom are not commands (wisdom would be confused with family lore)."""
     h = tempfile.mkdtemp()
     run(["never-forget", "staging creds rotate weekly"], h)
     names = ["lessons", "blessings", "curses", "blessing-and-a-curse"]
     assert {run([n], h) for n in names} == {"no blessings or curses yet (give it time)"}
-    names = ["trauma", "generational-trauma", "wisdom", "received-wisdom"]
-    assert {run([n], h) for n in names} == {"no trauma (yet)"}
+    names = ["generational-trauma", "received-wisdom"]
+    assert {run([n], h) for n in names} == {"no generational trauma (yet)"}
+    assert all(run([n], h).startswith("unknown command") for n in ("trauma", "wisdom"))
     sys.path.insert(0, HERE)
     from family import Family
     Family(os.path.join(h, "family")).mark("proj", "credential leak")
-    assert {run([n], h) for n in names} == {"trauma: credential leak 1.00 (lived)"}
-    return "4 names for lessons, 4 for trauma; trauma lists lived and inherited marks"
+    assert {run([n], h) for n in names} == {"generational trauma: credential leak 1.00 (lived)"}
+    return "4 names for lessons, 2 for generational trauma, which lists lived and inherited marks"
 
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]

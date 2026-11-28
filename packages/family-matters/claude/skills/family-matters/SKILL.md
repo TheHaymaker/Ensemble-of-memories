@@ -54,6 +54,6 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 - "suggest: ... ready to move out as a new generation", or proposed kin: tell the user and ask. Only run
   `fam move-out`, `fam midlife-crisis "..."` or `fam adopt other-project` when the user says so.
 
-Other commands: `fam lessons` (or `fam blessings`, `fam curses`), `fam trauma` (or `fam generational-trauma`,
-`fam wisdom`, `fam received-wisdom`: themes this project is sensitive to), `fam eavesdrop builder`, `fam tree`, `fam thanksgiving` (the family
+Other commands: `fam lessons` (or `fam blessings`, `fam curses`), `fam generational-trauma` (or
+`fam received-wisdom`: themes this project is sensitive to), `fam eavesdrop builder`, `fam tree`, `fam thanksgiving` (the family
 reunion), `fam identity-crisis` (where this project's memory lives), `fam help`.
