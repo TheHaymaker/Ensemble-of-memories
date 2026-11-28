@@ -189,7 +189,7 @@ def test_mcp_mode():
                 res = await s.call_tool("dinner", {})
                 return tools, res.content[0].text
     tools, heard = anyio.run(go)
-    assert {"dinner", "never_forget", "bring_up", "told_you_so", "blessing_and_a_curse", "dream_pairs", "dream_apply", "tree"} <= set(tools)
+    assert {"dinner", "never_forget", "bring_up", "told_you_so", "lessons", "trauma", "dream_pairs", "dream_apply", "tree"} <= set(tools)
     assert "deploys go out on tuesdays" in heard
     return f"an MCP client listed {len(tools)} tools, stored a memory and heard it back"
 
@@ -222,6 +222,21 @@ def test_old_ensemble_names_still_work():
     os.makedirs(os.path.join(home, ".family-matters"))
     assert where().startswith(os.path.join(home, ".family-matters", ""))
     return "ens-era commands, ENSEMBLE_* variables, .ensemble-answer.json and an unmigrated ~/.ensemble all still work"
+
+def test_lessons_and_trauma_answer_to_several_names():
+    """Lessons (blessings-and-curses) answer to lessons, blessings, curses and blessing-and-a-curse;
+    inherited marks (trauma) to trauma, generational-trauma, wisdom and received-wisdom."""
+    h = tempfile.mkdtemp()
+    run(["never-forget", "staging creds rotate weekly"], h)
+    names = ["lessons", "blessings", "curses", "blessing-and-a-curse"]
+    assert {run([n], h) for n in names} == {"no blessings or curses yet (give it time)"}
+    names = ["trauma", "generational-trauma", "wisdom", "received-wisdom"]
+    assert {run([n], h) for n in names} == {"no trauma (yet)"}
+    sys.path.insert(0, HERE)
+    from family import Family
+    Family(os.path.join(h, "family")).mark("proj", "credential leak")
+    assert {run([n], h) for n in names} == {"trauma: credential leak 1.00 (lived)"}
+    return "4 names for lessons, 4 for trauma; trauma lists lived and inherited marks"
 
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_")]

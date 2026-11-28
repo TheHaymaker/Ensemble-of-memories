@@ -17,7 +17,7 @@
 - **Does it work?** In a controlled A/B on real Claude sessions, it raised consistency with earlier decisions from **30/48 to 39/48**, and followed a preference that was only ever said in conversation **3/3 times vs 0/3** without it. Almost all of that came through the session-start briefing. Where the code already showed the answer, it made no difference. ([details](#what-the-lab-found))
 - **What it costs:** about a third more turns per session and roughly 6% more spend in that test.
 - **What makes it different:**
-  - **[Decay](#decay-forgetting-on-purpose).** Memories fade unless they're used, get repressed, and can be recovered. What keeps proving useful hardens into a **blessing-and-a-curse** that never fades. The briefing stays around 200 tokens however much is stored.
+  - **[Decay](#decay-forgetting-on-purpose).** Memories fade unless they're used, get repressed, and can be recovered. What keeps proving useful hardens into a **blessing-and-a-curse** that never fades (`fam lessons`, `fam blessings` or `fam curses` lists them). The briefing stays around 200 tokens however much is stored.
   - **[Generations and epigenetics](#generations-and-epigenetics).** Related projects form a family. Children are born hearing their parents' best-tested knowledge as unsolicited advice, inherit their temperament as traits, and carry big experiences (like a credential leak) as inherited **trauma** that weakens with each generation. A project that outgrows its world moves out as a new generation.
   - **[Family therapy](#family-therapy).** Dreams revisit and reconcile memories while Claude sleeps on it.
 - **Install:** `cd packages/family-matters && ./install.sh --hook`. No API keys, no server, plain files in `~/.family-matters`.
@@ -143,7 +143,7 @@ flowchart TB
 
 **Traits.** Curiosity, skepticism, steadiness and expressiveness are read from how each project actually lived, and they tune its settings: excursions per night, how high the dream judge's bar is, how many uses it takes to confirm an idea or form a blessing-and-a-curse. A child starts from a blend of its relatives' traits (parent 1, grandparent 0.5, sibling 0.3, aunt or uncle 0.15), and its own experience takes over as it lives.
 
-**Generational trauma (epigenetic marks).** A big experience, like a credential leak, leaves **trauma**: heightened sensitivity to that theme, so related memories count for more. Like all good trauma, it gets passed down.
+**Generational trauma (epigenetic marks).** A big experience, like a credential leak, leaves **trauma**: heightened sensitivity to that theme, so related memories count for more. Like all good trauma, it gets passed down. `fam trauma` lists it (so do `fam generational-trauma`, `fam wisdom` and `fam received-wisdom`).
 
 ```mermaid
 flowchart LR

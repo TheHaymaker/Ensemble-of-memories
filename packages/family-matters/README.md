@@ -34,7 +34,7 @@ Then, in any project:
 | `fam bring-up "..."` | search memory | recall |
 | `fam told-you-so m00012` | say a memory helped (strengthens it) | use-memory |
 | `fam revise-history OLD NEW` | a newer memory overturns an older one | replace-memory |
-| `fam blessing-and-a-curse` | hardened knowledge that never fades | lessons |
+| blessing-and-a-curse: `fam lessons`, `fam blessings`, `fam curses` (all the same command) | hardened knowledge that never fades | lessons |
 | repressed | faded out of the briefing, still searchable; a strong cue recovers it | dormant |
 | `fam vent "..."` / `fam eavesdrop builder` | your note / read another agent's | write-note / read-part |
 | `fam start-argument` / `take-sides` / `settle-argument` | a question the household votes on | open-question / vote / close-question |
@@ -42,7 +42,7 @@ Then, in any project:
 | `/family-therapy` | a night: dreams, poems, excursions | a night, sleep (`/ensemble-night`) |
 | unsolicited advice (`fam take-advice s0004`) | what a parent or earlier generation knew | sayings (adopt-saying) |
 | baggage | specific memories handed down intact | heirlooms |
-| trauma | inherited sensitivity to a theme, like a credential leak | epigenetic marks |
+| trauma: `fam trauma`, `fam generational-trauma`, `fam wisdom`, `fam received-wisdom` (all the same command) | sensitivity to a theme left by a big experience like a credential leak, lived or inherited | epigenetic marks |
 | family lore | a lesson several relatives learned on their own | family wisdom |
 | `fam thanksgiving` | the family reunion | family-reunion |
 | `fam move-out` / `fam stay-home` | accept or decline coming of age as a new generation | approve-generation / decline-generation |

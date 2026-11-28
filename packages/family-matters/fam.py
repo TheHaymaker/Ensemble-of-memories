@@ -303,9 +303,24 @@ def told_you_so(memory_id: str, agent: str = "conductor") -> str:
 
 
 @tool
-def blessing_and_a_curse(agent: str = "conductor") -> str:
-    """List this project's blessings-and-curses: hardened lessons that never fade; only settling an argument overturns one (was lessons)."""
+def lessons(agent: str = "conductor") -> str:
+    """List this project's blessings-and-curses: hardened lessons that never fade; only settling an argument
+    overturns one. Also: fam blessings, fam curses, fam blessing-and-a-curse."""
     return _safe(lambda: player(agent).lessons())
+
+
+@tool
+def trauma() -> str:
+    """List this project's trauma: big experiences (like a credential leak) that heightened its sensitivity to
+    a theme, lived or inherited from its ancestors at half strength per generation, fading over calm nights.
+    Also: fam generational-trauma, fam wisdom, fam received-wisdom."""
+    def go():
+        m, f = member(), family()
+        marks = f.effective_marks(m)
+        if not marks:
+            return "no trauma (yet)"
+        return "\n".join(f"trauma: {k['theme']} {k['strength']:.2f} ({'lived' if k['own'] else 'inherited'})" for k in marks)
+    return _safe(go)
 
 
 @tool
@@ -571,7 +586,8 @@ def serve_mcp():
 ALIASES = {"listen": "dinner", "read_part": "eavesdrop", "write_note": "vent", "vote": "take_sides",
            "open_question": "start_argument", "close_question": "settle_argument", "next_beat": "time_heals",
            "remember": "never_forget", "replace_memory": "revise_history", "recall": "bring_up",
-           "use_memory": "told_you_so", "lessons": "blessing_and_a_curse", "blessings": "blessing_and_a_curse", "adopt_saying": "take_advice",
+           "use_memory": "told_you_so", "blessings": "lessons", "curses": "lessons", "blessing_and_a_curse": "lessons",
+           "generational_trauma": "trauma", "wisdom": "trauma", "received_wisdom": "trauma", "adopt_saying": "take_advice",
            "family_tree": "tree", "approve_generation": "move_out", "decline_generation": "stay_home",
            "declare_milestone": "midlife_crisis", "approve_kin": "adopt", "family_reunion": "thanksgiving",
            "whoami": "identity_crisis", "reunion": "thanksgiving"}
@@ -580,13 +596,14 @@ USAGE = """fam: Family Matters, this project's long-lived memory (and its unreso
 
   fam dinner                               start here: the briefing. Memories, blessings-and-curses, arguments, advice
   fam never-forget "text" [--importance 0.7] [--replaces m00003]     fam revise-history m00003 m00009
-  fam bring-up "cue" [--strength 0.9]      fam told-you-so m00012   fam blessing-and-a-curse
+  fam bring-up "cue" [--strength 0.9]      fam told-you-so m00012   fam lessons (or blessings, curses)
   fam vent "what I'm doing"   fam eavesdrop builder   fam take-sides q yes 0.8
   fam start-argument q --text "what is being decided"   fam settle-argument q   fam time-heals
   fam dream-pairs | fam dream-apply --file .fam-answer.json        (therapy: Claude judges)
   fam poem-weave  | fam weave-apply --file ...   (therapy: older figures woven into one poem)
   fam poem-pairs  | fam poem-apply --file ...   fam excursion-seeds | fam excursion-apply --file ...
-  fam take-advice s0004 (or baggage h0005)   fam tree   fam thanksgiving   fam identity-crisis
+  fam trauma (or generational-trauma, wisdom, received-wisdom)   fam take-advice s0004 (or baggage h0005)
+  fam tree   fam thanksgiving   fam identity-crisis
   fam move-out | fam stay-home   fam midlife-crisis "v2 rewrite"   fam adopt other-project
   fam mcp                                  run as an MCP server instead
 Every command takes --agent NAME (default conductor) and --help. JSON for *-apply: --file PATH (a file
