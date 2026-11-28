@@ -1,6 +1,6 @@
 """fam: Family Matters for Claude Code, as a command (used by the family-matters skills) or an MCP server.
 
-    fam dinner | fam never-forget "..." | fam bring-up "..." | fam dream-pairs | ...   (see `fam help`)
+    fam gossip | fam never-forget "..." | fam bring-up "..." | fam dream-pairs | ...   (see `fam help`)
     fam mcp        claude mcp add --transport stdio --scope user family-matters -- fam mcp
 
 Every family has its memories, its baggage and its unresolved trauma. This one is yours.
@@ -33,7 +33,7 @@ Environment (each FAM_* also reads its old ENSEMBLE_* name, so installs from bef
     FAM_EXCURSIONS excursion seeds per therapy session (default 1)
     FAM_NIGHT_SEED fixes which pairs and seeds a session picks (experiments: two arms see the same ones)
 
-`fam --listen` prints the dinner-table briefing, never failing: use it as a SessionStart hook. On a
+`fam --listen` prints the family gossip briefing, never failing: use it as a SessionStart hook. On a
 new session (the hook's input says source "startup") it first advances the beat: one session, one beat.
 Old names still work: `ens` is a shim for `fam`, and every old command (`ens listen`, `ens remember`,
 `ens lessons`, ...) is an alias of its new name.
@@ -236,8 +236,8 @@ def _safe(call):
 
 
 @tool
-def dinner(agent: str = "conductor") -> str:
-    """Family dinner: the briefing. The beat, who changed their story, every open argument and
+def gossip(agent: str = "conductor") -> str:
+    """Family gossip: the briefing. The beat, who changed their story, every open argument and
     where it stands, your strongest memories, relevant blessings-and-curses and unsolicited family advice. Call this first."""
     return _safe(lambda: listen_text(agent))
 
@@ -573,10 +573,10 @@ def serve_mcp():
     except ImportError:                                          # 1.x
         from mcp.server.fastmcp import FastMCP as Server
     server = Server("family-matters", instructions=(
-        "Family Matters: this project's long-lived memory. Call dinner first in a task (the briefing). "
+        "Family Matters: this project's long-lived memory. Call gossip first in a task (the briefing). "
         "never_forget what is worth keeping (with replaces=<old id> when it overturns an earlier memory); "
         "bring_up before re-deciding something; told_you_so when you relied on a memory; take_sides on "
-        "open arguments. When dinner says therapy is overdue, run the /thats-not-how-i-remember-it skill (a night)."))
+        "open arguments. When gossip says therapy is overdue, run the /thats-not-how-i-remember-it skill (a night)."))
     for fn in COMMANDS.values():
         server.tool()(fn)
     server.run("stdio")
@@ -584,7 +584,7 @@ def serve_mcp():
 
 # The names from before the rename (Ensemble's `ens`): each still works as an alias, so old habits,
 # old skills and old transcripts keep working.
-ALIASES = {"listen": "dinner", "read_part": "eavesdrop", "write_note": "vent", "vote": "take_sides",
+ALIASES = {"listen": "gossip", "dinner": "gossip", "read_part": "eavesdrop", "write_note": "vent", "vote": "take_sides",
            "open_question": "start_argument", "close_question": "settle_argument", "next_beat": "time_heals",
            "remember": "never_forget", "replace_memory": "revise_history", "recall": "bring_up",
            "use_memory": "told_you_so", "blessings": "lessons", "curses": "lessons", "blessing_and_a_curse": "lessons",
@@ -595,7 +595,7 @@ ALIASES = {"listen": "dinner", "read_part": "eavesdrop", "write_note": "vent", "
 
 USAGE = """fam: Family Matters, this project's long-lived memory (and its unresolved issues)
 
-  fam dinner                               start here: the briefing. Memories, blessings-and-curses, arguments, advice
+  fam gossip                               start here: the briefing. Memories, blessings-and-curses, arguments, advice
   fam never-forget "text" [--importance 0.7] [--replaces m00003]     fam revise-history m00003 m00009
   fam bring-up "cue" [--strength 0.9]      fam told-you-so m00012   fam lessons (or blessings, curses)
   fam vent "what I'm doing"   fam eavesdrop builder   fam take-sides q yes 0.8
@@ -635,7 +635,7 @@ def cli(argv):
         try:
             if session_started():                              # a new session is one beat of the clock
                 player("conductor").next_beat()
-            print("Family Matters (dinner-table briefing: this project's memory):\n" + listen_text())
+            print("Family Matters (family gossip briefing: this project's memory):\n" + listen_text())
         except Exception as err:                               # never block a session start
             print(f"Family Matters unavailable (the family is not speaking to you): {err}")
         return 0

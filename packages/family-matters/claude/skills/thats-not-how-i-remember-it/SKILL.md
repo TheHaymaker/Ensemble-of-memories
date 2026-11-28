@@ -1,6 +1,6 @@
 ---
 name: thats-not-how-i-remember-it
-description: Run a night (a therapy session) for this project's Family Matters memory: weave earlier poems into one, work through the dream pairs, make poems that refuse the likely, and go on curious excursions. Use when `fam dinner` says therapy is overdue, or when the user asks to sleep, dream, process or consolidate memory.
+description: Run a night (a therapy session) for this project's Family Matters memory: weave earlier poems into one, work through the dream pairs, make poems that refuse the likely, and go on curious excursions. Use when `fam gossip` says therapy is overdue, or when the user asks to sleep, dream, process or consolidate memory.
 allowed-tools: Bash(fam *)
 ---
 
@@ -98,5 +98,5 @@ then `fam excursion-apply --file .fam-answer.json`.
 
 ## Then
 
-Run `fam dinner` and tell the user, in two or three lines, what the session changed: replacements,
+Run `fam gossip` and tell the user, in two or three lines, what the session changed: replacements,
 tensions raised, blessings-and-curses formed, and anything delightful from the poems or excursions.

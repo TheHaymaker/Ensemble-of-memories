@@ -12,7 +12,7 @@
 
 ## TL;DR
 
-- **What it is:** a small `fam` CLI, two Claude Code skills and a SessionStart hook. Claude remembers decisions (`fam never-forget`), brings them up before re-deciding (`fam bring-up`), and starts every session at family dinner: a short briefing on what this project knows.
+- **What it is:** a small `fam` CLI, two Claude Code skills and a SessionStart hook. Claude remembers decisions (`fam never-forget`), brings them up before re-deciding (`fam bring-up`), and starts every session with the family gossip (`fam gossip`): a short briefing on what this project knows.
 - **Why:** a new session only knows what's in the repo. Decisions and preferences that were only ever *said* ("whole grams only, please") get lost. Family Matters keeps them, and will bring them up again. And again.
 - **Does it work?** In a controlled A/B on real Claude sessions, it raised consistency with earlier decisions from **30/48 to 39/48**, and followed a preference that was only ever said in conversation **3/3 times vs 0/3** without it. Almost all of that came through the session-start briefing. Where the code already showed the answer, it made no difference. ([details](#what-the-lab-found))
 - **What it costs:** about a third more turns per session and roughly 6% more spend in that test.
@@ -23,7 +23,7 @@
 - **Install:** `cd packages/family-matters && ./install.sh --hook`. No API keys, no server, plain files in `~/.family-matters`.
 
 ```console
-$ fam dinner
+$ fam gossip
 beat 0 | changed: none
 memory: 3 active, 0 repressed, 0 blessings-and-curses
   m00001 short 0.80: Whenever we show grams, whole grams only (the baker asked)
@@ -43,9 +43,9 @@ This installs:
 
 - **the `fam` command** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`;
 - **skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night: dreams, poems, excursions), with seven aliases for the night named after other family sayings;
-- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family dinner), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
+- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family gossip), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
 
-Then just work. Claude uses the skills by itself. Run `/thats-not-how-i-remember-it` when `fam dinner` says therapy is overdue, and use `fam dinner`, `fam bring-up "..."`, `fam tree` and `fam help` from your terminal. The full guide, with every command and what the family calls things, is in [`packages/family-matters/README.md`](packages/family-matters/README.md).
+Then just work. Claude uses the skills by itself. Run `/thats-not-how-i-remember-it` when `fam gossip` says therapy is overdue, and use `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help` from your terminal. The full guide, with every command and what the family calls things, is in [`packages/family-matters/README.md`](packages/family-matters/README.md).
 
 **Coming from Ensemble?** Re-run `./install.sh`. It moves `~/.ensemble` to `~/.family-matters`, keeps `ens` working as a shim for `fam`, and swaps in the new skills and hook. Old command names (`ens listen`, `ens remember`, `ens lessons`) and `ENSEMBLE_*` variables still work.
 
@@ -55,7 +55,7 @@ Then just work. Claude uses the skills by itself. Run `/thats-not-how-i-remember
 
 ```mermaid
 flowchart LR
-    S([Session starts]) -->|SessionStart hook| L["fam dinner<br/><i>briefing: strongest memories,<br/>blessings-and-curses, family advice</i>"]
+    S([Session starts]) -->|SessionStart hook| L["fam gossip<br/><i>briefing: strongest memories,<br/>blessings-and-curses, family advice</i>"]
     L --> W[Claude works on the task]
     W -->|before re-deciding| R["fam bring-up"]
     R --> W
@@ -71,11 +71,11 @@ The briefing stays small (about 150 to 200 tokens of memory) however much the pr
 
 ### Nights: "That's not how I remember it"
 
-When enough unprocessed memories have piled up, `fam dinner` says therapy is overdue and `/thats-not-how-i-remember-it` runs a night. Every family saying that describes a night works too: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`. Claude plays every part. Each step is a two-step exchange: `fam` proposes, Claude answers, and `fam` applies the answers.
+When enough unprocessed memories have piled up, `fam gossip` says therapy is overdue and `/thats-not-how-i-remember-it` runs a night. Every family saying that describes a night works too: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`. Claude plays every part. Each step is a two-step exchange: `fam` proposes, Claude answers, and `fam` applies the answers.
 
 ```mermaid
 flowchart TB
-    due{{"fam dinner: therapy is overdue"}} --> D
+    due{{"fam gossip: therapy is overdue"}} --> D
     subgraph night ["/thats-not-how-i-remember-it"]
         direction TB
         D["<b>Dreams</b><br/>pairs new memories with older and repressed ones.<br/>Claude judges: reinforce, link, qualify,<br/>replace, contradict, or flag a tension"]
@@ -175,7 +175,7 @@ The recall A/B ([PR #9](https://github.com/TheHaymaker/ensemble-of-memories/pull
 | turns per session | 11.4 | 8.5 |
 | cost per session | $0.26 | $0.24 |
 
-**The honest reading:** memory doesn't make Claude better at the work itself. It helps by carrying knowledge the repo doesn't contain. On probes where the earlier decision was visible in the code, tests or README, both arms scored the same. The session-start briefing (family dinner) carried every winning trial; dreams and poems played no visible part in that test. Samples are small, so only large effects show up. One failure it surfaced, a child inheriting a decision its parent had since overturned, is being fixed.
+**The honest reading:** memory doesn't make Claude better at the work itself. It helps by carrying knowledge the repo doesn't contain. On probes where the earlier decision was visible in the code, tests or README, both arms scored the same. The session-start briefing (family gossip) carried every winning trial; dreams and poems played no visible part in that test. Samples are small, so only large effects show up. One failure it surfaced, a child inheriting a decision its parent had since overturned, is being fixed.
 
 ## This repo
 

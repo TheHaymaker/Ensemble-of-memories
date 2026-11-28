@@ -14,12 +14,12 @@ cd packages/family-matters   # from a clone of this repo
 This installs:
 - **the `fam` command** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`;
 - **skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night: dreams, poems, excursions), plus seven alias skills for the night named after other family sayings: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`;
-- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family dinner), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
+- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family gossip), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
 
 Then, in any project:
-- **Claude uses the skills by itself:** it sits down to dinner at the start of a task, never forgets decisions, brings up the past before re-deciding, and takes sides.
-- **`/thats-not-how-i-remember-it`** (or any of its aliases) runs a night, with Claude as the patient, the therapist, the poet and the runaway. `fam dinner` says when therapy is overdue.
-- **In your terminal:** `fam dinner`, `fam bring-up "..."`, `fam tree` and `fam help`.
+- **Claude uses the skills by itself:** it catches up on the family gossip at the start of a task, never forgets decisions, brings up the past before re-deciding, and takes sides.
+- **`/thats-not-how-i-remember-it`** (or any of its aliases) runs a night, with Claude as the patient, the therapist, the poet and the runaway. `fam gossip` says when therapy is overdue.
+- **In your terminal:** `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help`.
 
 **Projects** are named after the folder Claude Code starts in, or `FAM_PROJECT`. Start a new project with `FAM_PARENTS=other-project` to make it a child of that project. Subagents pass `--agent builder` (or their own name) to act as other household members. Moving out (new generations) and adoption (kinship) are always your call: the skill tells Claude to ask you first.
 
@@ -29,7 +29,7 @@ Then, in any project:
 
 | Family Matters | what it is | the engine's word (code, storage, docs below, old `ens` command) |
 |---|---|---|
-| `fam dinner` | the session-start briefing | listen |
+| `fam gossip` | the session-start briefing | listen (`fam dinner` also still works) |
 | `fam never-forget "..."` | store a memory | remember |
 | `fam bring-up "..."` | search memory | recall |
 | `fam told-you-so m00012` | say a memory helped (strengthens it) | use-memory |

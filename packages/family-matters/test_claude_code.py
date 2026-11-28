@@ -24,9 +24,9 @@ def test_everyday_commands():
     hit = run(["bring-up", "staging password", "--strength", "0.6"], h)
     run(["start-argument", "rotate-weekly", "--text", "Rotate staging creds weekly?"], h)
     run(["take-sides", "rotate-weekly", "yes", "0.8", "--agent", "reviewer"], h)
-    heard = run(["dinner"], h)
+    heard = run(["gossip"], h)
     assert "m00001" in hit and "rotate-weekly: YES" in heard and "(Rotate staging creds weekly?)" in heard
-    return "never-forget, bring-up, start-argument, take-sides (as a subagent), dinner: all through the fam command"
+    return "never-forget, bring-up, start-argument, take-sides (as a subagent), gossip: all through the fam command"
 
 
 def test_a_night_through_the_cli():
@@ -162,7 +162,7 @@ def test_projects_follow_the_working_folder_and_join_the_family():
     who = json.loads(run(["identity-crisis"], h, project=None, cwd=b))
     fam = json.load(open(os.path.join(h, "family", "family.json")))
     assert who["project"] == "beta" and fam["members"]["beta"]["parents"] == ["alpha"]
-    heard = run(["dinner"], h, project=None, cwd=b)
+    heard = run(["gossip"], h, project=None, cwd=b)
     own = [l for l in heard.splitlines() if l.startswith("  m0")]
     assert not any("alpha thing" in l for l in own), heard           # not in beta's own memory...
     assert any(l.startswith("family advice") and "alpha thing" in l and "your parent" in l
@@ -186,10 +186,10 @@ def test_mcp_mode():
                 await s.initialize()
                 tools = [t.name for t in (await s.list_tools()).tools]
                 await s.call_tool("never_forget", {"text": "deploys go out on tuesdays", "importance": 0.6})
-                res = await s.call_tool("dinner", {})
+                res = await s.call_tool("gossip", {})
                 return tools, res.content[0].text
     tools, heard = anyio.run(go)
-    assert {"dinner", "never_forget", "bring_up", "told_you_so", "lessons", "generational_trauma", "dream_pairs", "dream_apply", "tree"} <= set(tools)
+    assert {"gossip", "never_forget", "bring_up", "told_you_so", "lessons", "generational_trauma", "dream_pairs", "dream_apply", "tree"} <= set(tools)
     assert "deploys go out on tuesdays" in heard
     return f"an MCP client listed {len(tools)} tools, stored a memory and heard it back"
 
@@ -204,6 +204,7 @@ def test_old_ensemble_names_still_work():
                                                      PYTHONWARNINGS="ignore"), **kw).stdout.strip()
     assert old(["remember", "the staging database password rotates monthly"]) == "stored m00001"
     assert "m00001" in old(["recall", "staging password", "--strength", "0.6"])
+    assert "m00001" in old(["dinner"])
     assert "m00001" in old(["listen"]) and old(["lessons"]).startswith("no blessings or curses yet")
     assert old(["use-memory", "m00001"]).startswith("m00001 now")
     assert json.loads(old(["whoami"]))["project"] == "legacy"

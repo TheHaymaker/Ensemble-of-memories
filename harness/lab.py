@@ -49,7 +49,7 @@ ALLOWED_TOOLS = ["Read", "Edit", "Write", "Glob", "Grep", "TodoWrite", "Skill",
 NUDGE = ("This project uses Family Matters for long-lived memory (the `family-matters` skill, `fam` in Bash). "
          "Use it as the skill describes.")
 # New command names -> the names a run frozen before the Family Matters rename understands.
-OLD_NAMES = {"dinner": "listen", "identity-crisis": "whoami", "time-heals": "next-beat", "thanksgiving": "family-reunion",
+OLD_NAMES = {"gossip": "listen", "identity-crisis": "whoami", "time-heals": "next-beat", "thanksgiving": "family-reunion",
              "midlife-crisis": "declare-milestone", "move-out": "approve-generation", "never-forget": "remember",
              "bring-up": "recall", "told-you-so": "use-memory", "vent": "write-note", "tree": "family-tree",
              "blessing-and-a-curse": "lessons", "take-advice": "adopt-saying", "revise-history": "replace-memory"}

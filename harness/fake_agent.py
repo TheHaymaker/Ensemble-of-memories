@@ -39,7 +39,7 @@ def session(r, project, task):
 
 
 def night(r, project):
-    rng = _rng(r.name, project, r.fam(project, "dinner").splitlines()[0])
+    rng = _rng(r.name, project, r.fam(project, "gossip").splitlines()[0])
     calls = []
 
     pairs = json.loads(r.fam(project, "dream-pairs"))["pairs"]
