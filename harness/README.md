@@ -56,7 +56,7 @@ child born after its parent has lived inherits the parent's traits and generatio
 
 ## `--fake`
 
-`fake_agent.py` drives `fam` the way the skills ask, without a model: dinner, bring-up, told-you-so what it
+`fake_agent.py` drives `fam` the way the skills ask, without a model: gossip, bring-up, told-you-so what it
 finds, never-forget the task's expected memories, and simple deterministic night verdicts. Use it to
 test the harness and Family Matters' mechanics quickly and for free (`many-nights` takes about a minute).
 It says nothing about whether Claude uses Family Matters well.

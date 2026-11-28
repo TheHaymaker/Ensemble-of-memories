@@ -152,7 +152,7 @@ def test_the_fam_command_takes_replaces():
     run = lambda *a: subprocess.run(ens + list(a), capture_output=True, text=True, env=env, timeout=60).stdout.strip()
     assert run("never-forget", OLD) == "stored m00001"
     assert run("never-forget", NEW, "--replaces", "m00001") == "stored m00002, replacing m00001"
-    assert "m00001" not in run("dinner") and "--replaces" in run("never-forget", "--help")
+    assert "m00001" not in run("gossip") and "--replaces" in run("never-forget", "--help")
     assert run("revise-history", "m00002", "m00001").startswith("error")
     return "fam never-forget --replaces and fam revise-history work from the command line"
 

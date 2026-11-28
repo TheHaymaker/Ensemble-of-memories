@@ -2,7 +2,7 @@
 # Install Family Matters for Claude Code.
 #   ./install.sh            the `fam` command and the skills (family-matters, and the night: thats-not-how-i-remember-it
 #                           plus seven alias skills named after other family sayings)
-#   ./install.sh --hook     also: family dinner (`fam --listen`) at the start of every Claude Code session
+#   ./install.sh --hook     also: family gossip (`fam --listen`) at the start of every Claude Code session
 #   ./install.sh --mcp      also: register `fam mcp` as an MCP server (user scope)
 # Re-run any time to update. Nothing outside ~/.family-matters, ~/.local/bin/{fam,ens} and ~/.claude is touched.
 #
@@ -128,4 +128,4 @@ if [ "$want_mcp" = 1 ]; then
 fi
 
 case ":$PATH:" in *":$BIN:"*) ;; *) echo "!! add $BIN to your PATH (e.g. in ~/.zshrc: export PATH=\"$BIN:\$PATH\")" ;; esac
-echo "done. Try: fam help   then, in any project: fam dinner"
+echo "done. Try: fam help   then, in any project: fam gossip"

@@ -13,7 +13,7 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 
 ## Every task
 
-1. `fam dinner` first: the briefing. It shows open arguments and where everyone stands, your
+1. `fam gossip` first: the briefing. It shows open arguments and where everyone stands, your
    strongest memories, any blessing-and-a-curse (hardened lessons) or family advice relevant to an open argument,
    and suggestions.
 2. Before deciding something that might have been decided before: `fam bring-up "the question in plain words"`.
@@ -23,12 +23,12 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
    family advice or baggage, `fam take-advice s0004` (or h0005) first, then told-you-so the memory it
    gives you). This is the only thing that makes knowledge last, confirms ideas from therapy and the
    family, and turns memories into blessings-and-curses. Before you finish a task, told-you-so each memory you
-   relied on, including ones `fam dinner` showed you.
+   relied on, including ones `fam gossip` showed you.
 4. When you learn or decide something worth keeping: `fam never-forget "one plain sentence" --importance 0.7`.
    Remember decisions, constraints, gotchas and why. Not chatter, not things git already records.
    **When it overturns something already remembered** (the user changed a rule, a decision was
    reversed, a fact went stale), say which memory it replaces: `fam never-forget "..." --replaces m00003`.
-   Check `fam dinner` and `fam bring-up` for the old one's id first. If `never-forget` answers "Close to:
+   Check `fam gossip` and `fam bring-up` for the old one's id first. If `never-forget` answers "Close to:
    m00003 ..." and the new memory does overturn it, run `fam revise-history m00003 m00009`. A revised
    memory stops being shown, brought up or handed down to child projects, so a stale rule can't come back.
 5. Keep your note current: `fam vent "what I am doing, what I need"` (overwrites; not a diary).
@@ -48,7 +48,7 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 - "family advice/baggage ... unsolicited, advice only" is what a relative project or earlier generation
   knew. Take it (`fam take-advice s0004`) only if it fits, then told-you-so to confirm it.
 
-## When dinner says
+## When gossip says
 
 - "therapy is overdue": run the `thats-not-how-i-remember-it` skill (a night).
 - "suggest: ... ready to move out as a new generation", or proposed kin: tell the user and ask. Only run
