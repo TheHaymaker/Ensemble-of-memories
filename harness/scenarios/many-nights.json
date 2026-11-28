@@ -1,5 +1,5 @@
 {
-  "about": "Mechanics stress test, meant for --fake: the same tasks again and again with a night after each round, so memories get spaced uses, go long-term, form trauma (lessons) and pass to children as advice. Shows whether trauma and advice ever appear at the default thresholds.",
+  "about": "Mechanics stress test, meant for --fake: the same tasks again and again with a night after each round, so memories get spaced uses, go long-term, form blessings-and-curses (lessons) and pass to children as advice. Shows whether blessings-and-curses and advice ever appear at the default thresholds.",
   "projects": ["recipe-core", "meal-planner", "grocery-bot"],
   "env": {"FAM_SLEEP_AT": "4"},
   "beats_per_session": 1,

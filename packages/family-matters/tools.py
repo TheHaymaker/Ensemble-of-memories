@@ -9,7 +9,7 @@ from ensemble import CAP, Ensemble
 
 # What the family calls things. Storage keeps the engine's words (tier "lesson", "dormant", sayings,
 # heirlooms), so stores from before the Family Matters rename load unchanged; only what is shown changes.
-SHOW_TIER = {"dormant": "repressed", "lesson": "trauma"}
+SHOW_TIER = {"dormant": "repressed", "lesson": "blessing-and-a-curse"}
 SHOW_KIND = {"saying": "advice", "heirloom": "baggage", "wisdom": "lore"}
 
 
@@ -95,7 +95,7 @@ class Player:
                         lines.append(f'  (Does "{t["a_text"][:80]}" take precedence over "{t["b_text"][:80]}"?)')
             context = " ".join(f"{q} {r.get('text', '')}" for q, r in st["score"].items())
             for l in self.memory.lessons_for(context):
-                lines.append(f"trauma {l['id']}: {self.memory.read(l['id'])}")
+                lines.append(f"blessing-and-a-curse {l['id']}: {self.memory.read(l['id'])}")
             if self.family is not None and self.name == self.e.conductor:
                 sug = self.family.suggest(self.member)
                 if sug:
@@ -255,9 +255,9 @@ class Player:
 
     @_safe
     def lessons(self) -> str:
-        """List your trauma (lessons): hardened knowledge that never fades and that only a vote can overturn."""
+        """List your blessings-and-curses (lessons): hardened knowledge that never fades and that only a vote can overturn."""
         ls = self.memory.lessons()
-        return "\n".join(f"{l['id']}: {l['text']}" for l in ls) or "no trauma yet (give it time)"
+        return "\n".join(f"{l['id']}: {l['text']}" for l in ls) or "no blessings or curses yet (give it time)"
 
     @_safe
     def adopt_saying(self, saying_id: str) -> str:

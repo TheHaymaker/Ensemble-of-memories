@@ -189,7 +189,7 @@ def test_mcp_mode():
                 res = await s.call_tool("dinner", {})
                 return tools, res.content[0].text
     tools, heard = anyio.run(go)
-    assert {"dinner", "never_forget", "bring_up", "told_you_so", "trauma", "dream_pairs", "dream_apply", "tree"} <= set(tools)
+    assert {"dinner", "never_forget", "bring_up", "told_you_so", "blessing_and_a_curse", "dream_pairs", "dream_apply", "tree"} <= set(tools)
     assert "deploys go out on tuesdays" in heard
     return f"an MCP client listed {len(tools)} tools, stored a memory and heard it back"
 
@@ -204,7 +204,7 @@ def test_old_ensemble_names_still_work():
                                                      PYTHONWARNINGS="ignore"), **kw).stdout.strip()
     assert old(["remember", "the staging database password rotates monthly"]) == "stored m00001"
     assert "m00001" in old(["recall", "staging password", "--strength", "0.6"])
-    assert "m00001" in old(["listen"]) and old(["lessons"]).startswith("no trauma yet")
+    assert "m00001" in old(["listen"]) and old(["lessons"]).startswith("no blessings or curses yet")
     assert old(["use-memory", "m00001"]).startswith("m00001 now")
     assert json.loads(old(["whoami"]))["project"] == "legacy"
     old(["remember", "the staging db password now rotates weekly instead"])

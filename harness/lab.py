@@ -52,7 +52,7 @@ NUDGE = ("This project uses Family Matters for long-lived memory (the `family-ma
 OLD_NAMES = {"dinner": "listen", "identity-crisis": "whoami", "time-heals": "next-beat", "thanksgiving": "family-reunion",
              "midlife-crisis": "declare-milestone", "move-out": "approve-generation", "never-forget": "remember",
              "bring-up": "recall", "told-you-so": "use-memory", "vent": "write-note", "tree": "family-tree",
-             "trauma": "lessons", "take-advice": "adopt-saying", "revise-history": "replace-memory"}
+             "blessing-and-a-curse": "lessons", "take-advice": "adopt-saying", "revise-history": "replace-memory"}
 INHERITED_DROP = ("CLAUDE_MEMORY_STORES", "CLAUDE_COWORK_MEMORY_PATH_OVERRIDE", "CLAUDE_ADDITIONAL_DIRECTORIES",
                   "CLAUDE_CODE_CHILD_NOTES_DIR",
                   # set when the harness itself runs inside a cloud Claude session; with them, project
@@ -599,7 +599,7 @@ def write_report(r):
         L.append("")
 
     L += ["## Memory over time (conductor)", "",
-          "| snapshot | project | total | short/int/long/repressed | trauma | unconfirmed ideas | confirmed | inherited | imagined | outdated | poems | excursions | pressure | beat |",
+          "| snapshot | project | total | short/int/long/repressed | blessings-and-curses | unconfirmed ideas | confirmed | inherited | imagined | outdated | poems | excursions | pressure | beat |",
           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     shown = {}
     for s, sm in zip(snaps, sums):
@@ -639,10 +639,10 @@ def write_report(r):
                 for m in c["memories"]:
                     old = before.get(m["id"])
                     if old is None:
-                        tag = "trauma" if m["lesson"] else (m["src"] if m["src"] in IMAGINED else m["origin"])
+                        tag = "blessing-and-a-curse" if m["lesson"] else (m["src"] if m["src"] in IMAGINED else m["origin"])
                         lines.append(f"- {member}/{ag} {m['id']} new ({tag}): {m['head'][:110]}")
                     elif m["lesson"] and not old["lesson"]:
-                        lines.append(f"- {member}/{ag} {m['id']} became trauma: {m['head'][:110]}")
+                        lines.append(f"- {member}/{ag} {m['id']} became a blessing-and-a-curse: {m['head'][:110]}")
                     elif m["outdated"] and not old["outdated"]:
                         lines.append(f"- {member}/{ag} {m['id']} marked outdated: {m['head'][:110]}")
                 prev[(member, ag)] = {m["id"]: m for m in c["memories"]}

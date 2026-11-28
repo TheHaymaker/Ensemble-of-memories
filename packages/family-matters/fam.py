@@ -6,7 +6,7 @@
 Every family has its memories, its baggage and its unresolved trauma. This one is yours.
 
 Layout (FAM_HOME, default ~/.family-matters):
-    family/                         the family: tree, traits, hang-ups, advice, baggage, lore
+    family/                         the family: tree, traits, inherited trauma, advice, baggage, lore
     projects/<member>/state/        that project's household (notes, arguments, who sided with whom)
     projects/<member>/memory/<agent>/   each agent's own tiered memory
 
@@ -237,7 +237,7 @@ def _safe(call):
 @tool
 def dinner(agent: str = "conductor") -> str:
     """Family dinner: the briefing. The beat, who changed their story, every open argument and
-    where it stands, your strongest memories, relevant trauma and unsolicited family advice. Call this first."""
+    where it stands, your strongest memories, relevant blessings-and-curses and unsolicited family advice. Call this first."""
     return _safe(lambda: listen_text(agent))
 
 
@@ -303,8 +303,8 @@ def told_you_so(memory_id: str, agent: str = "conductor") -> str:
 
 
 @tool
-def trauma(agent: str = "conductor") -> str:
-    """List this project's trauma: hardened lessons that never fade; only settling an argument overturns one (was lessons)."""
+def blessing_and_a_curse(agent: str = "conductor") -> str:
+    """List this project's blessings-and-curses: hardened lessons that never fade; only settling an argument overturns one (was lessons)."""
     return _safe(lambda: player(agent).lessons())
 
 
@@ -523,7 +523,7 @@ def adopt(other_project: str) -> str:
 
 @tool
 def thanksgiving() -> str:
-    """Thanksgiving: gather the family. Trauma is retold as advice, advice that was taken is scored, family lore and long-lost kin are found (was family-reunion)."""
+    """Thanksgiving: gather the family. Blessings-and-curses are retold as advice, advice that was taken is scored, family lore and long-lost kin are found (was family-reunion)."""
     def go():
         member()
         out = family().reunion()
@@ -571,16 +571,16 @@ def serve_mcp():
 ALIASES = {"listen": "dinner", "read_part": "eavesdrop", "write_note": "vent", "vote": "take_sides",
            "open_question": "start_argument", "close_question": "settle_argument", "next_beat": "time_heals",
            "remember": "never_forget", "replace_memory": "revise_history", "recall": "bring_up",
-           "use_memory": "told_you_so", "lessons": "trauma", "adopt_saying": "take_advice",
+           "use_memory": "told_you_so", "lessons": "blessing_and_a_curse", "blessings": "blessing_and_a_curse", "adopt_saying": "take_advice",
            "family_tree": "tree", "approve_generation": "move_out", "decline_generation": "stay_home",
            "declare_milestone": "midlife_crisis", "approve_kin": "adopt", "family_reunion": "thanksgiving",
            "whoami": "identity_crisis", "reunion": "thanksgiving"}
 
 USAGE = """fam: Family Matters, this project's long-lived memory (and its unresolved issues)
 
-  fam dinner                               start here: the briefing. Memories, trauma, arguments, family advice
+  fam dinner                               start here: the briefing. Memories, blessings-and-curses, arguments, advice
   fam never-forget "text" [--importance 0.7] [--replaces m00003]     fam revise-history m00003 m00009
-  fam bring-up "cue" [--strength 0.9]      fam told-you-so m00012       fam trauma
+  fam bring-up "cue" [--strength 0.9]      fam told-you-so m00012   fam blessing-and-a-curse
   fam vent "what I'm doing"   fam eavesdrop builder   fam take-sides q yes 0.8
   fam start-argument q --text "what is being decided"   fam settle-argument q   fam time-heals
   fam dream-pairs | fam dream-apply --file .fam-answer.json        (therapy: Claude judges)

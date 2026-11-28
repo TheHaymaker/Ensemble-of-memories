@@ -22,7 +22,7 @@ python3 harness/lab.py report saga1              # rewritten after every play an
 | `home/` | this run's `FAM_HOME`. Your real `~/.family-matters` is never touched. |
 | `work/<project>/` | a git repo copy of each test project (without `tasks.json`, so Claude never sees the expected answers), with project-level skills in `.claude/skills/` and `.claude/settings.json` holding the SessionStart hook (`bin/fam --listen`), the env, and allowed tools. One commit per step, so `git log -p` shows what each session changed. |
 | `transcripts/` | each Claude session's stream-json transcript |
-| `snapshots/NNN-label/` | a copy of `home/` after each step, plus `summary.json` (counts per tier, trauma (lessons), ideas, imagined, outdated, poems, excursions, family members, traits, advice (sayings), every memory's head) |
+| `snapshots/NNN-label/` | a copy of `home/` after each step, plus `summary.json` (counts per tier, blessings-and-curses (lessons), ideas, imagined, outdated, poems, excursions, family members, traits, advice (sayings), every memory's head) |
 | `log.jsonl` | one line per step: cost, turns, the `fam` commands Claude ran, births, outputs |
 | `report.md` | sessions table, memory over time, family, what each step added, and a rough check of expected memories |
 | `progress.json` | finished scenario steps; re-running `play` resumes after the last one |
@@ -45,13 +45,13 @@ A scenario is JSON: `projects` (default all), `env` (e.g. `FAM_SLEEP_AT`), `nudg
 
 Included: `smoke` (2 sessions and a night), `no-nudge` (does Claude use Family Matters unprompted?),
 `family-saga` (three generations, an unrelated founder, reunions, a coming of age; about 24
-sessions and 7 nights), `many-nights` (for `--fake`: enough repetition to reach trauma and advice).
+sessions and 7 nights), `many-nights` (for `--fake`: enough repetition to reach blessings-and-curses and advice).
 
 ## Families and births
 
 A project joins the family at its first step, and its parents (from
 `test-projects/family.json`) join first. Order in the scenario is therefore order of birth: a
-child born after its parent has lived inherits the parent's traits and hang-ups (marks) as they are then.
+child born after its parent has lived inherits the parent's traits and trauma (marks) as they are then.
 `FAM_PARENTS` only matters at that first join, which is why the harness controls it.
 
 ## `--fake`

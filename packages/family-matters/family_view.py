@@ -129,12 +129,12 @@ aside ul {{ margin:0; padding-left:18px; }} .muted {{ color:var(--muted); }}
 </style></head><body>
 <header><h1>{html.escape(title)}</h1>
 <div class="legend">Rows are generations. Thick line: the same project coming of age. Dashed: approved kinship.
-Bars: curiosity, skepticism, steadiness, expressiveness. Red dots: hang-ups, inherited or lived (darker is stronger).
+Bars: curiosity, skepticism, steadiness, expressiveness. Red dots: trauma, inherited or lived (darker is stronger).
 Yellow dot: a pending suggestion. Faded: retired. Click a member for details.</div></header>
 <main><div class="canvas"><svg viewBox="0 0 {width} {height}" width="{width}" height="{height}" role="img"
 aria-label="family tree">{''.join(edges)}{''.join(nodes)}</svg></div>
 <aside id="panel"><h2>Family lore</h2><ul>{wisdom}</ul>
-<p class="muted" style="margin-top:14px">Select a member to see its traits, hang-ups, the advice it gave and the baggage it left.</p></aside></main>
+<p class="muted" style="margin-top:14px">Select a member to see its traits, trauma, the advice it gave and the baggage it left.</p></aside></main>
 <script>
 const M = {json.dumps(members)};
 const esc = s => String(s).replace(/[&<>"]/g, c => ({{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}})[c]);
@@ -149,7 +149,7 @@ function show(name) {{
           (m.parents.length ? ", from " + m.parents.map(esc).join(" + ") : ", founder") + "</p>";
   if (m.came_of_age) h += "<h3>Came of age</h3><p>" + esc(m.came_of_age.why || "") + "</p>";
   if (m.suggestion && m.suggestion.status === "pending") h += "<h3>Suggested: new generation</h3>" + list(m.suggestion.reasons);
-  h += "<h3>Traits</h3>" + list(traits) + "<h3>Hang-ups</h3>" + list(marks) +
+  h += "<h3>Traits</h3>" + list(traits) + "<h3>Trauma</h3>" + list(marks) +
        "<h3>Unsolicited advice it gave</h3>" + list(m.sayings) + "<h3>Baggage it left</h3>" + list(m.heirlooms) +
        "<p style='margin-top:14px'><a href='#' id=back>Back to family lore</a></p>";
   panel.innerHTML = h;
@@ -172,7 +172,7 @@ def to_mermaid(family):
     lines = ["flowchart TD"]
     for n, m in members.items():
         mk = max((k["strength"] for k in m["marks"]), default=0)
-        label = f"{n}<br/>gen {m['gen']}, {m['status']}" + (f"<br/>hang-up {mk:.2f}" if mk else "")
+        label = f"{n}<br/>gen {m['gen']}, {m['status']}" + (f"<br/>trauma {mk:.2f}" if mk else "")
         lines.append(f'    {ids[n]}["{label}"]')
         if m["status"] == "retired":
             lines.append(f"    style {ids[n]} stroke-dasharray: 3 3")

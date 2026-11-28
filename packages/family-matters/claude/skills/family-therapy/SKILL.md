@@ -51,7 +51,7 @@ mean nothing: answer `none`. Otherwise:
 Only `add`, `qualify` and `tension` insights are kept, as new memories; leave `insight` null for the
 rest. An insight is a claim about the project that would help a later session decide something,
 not a to-do ("add a test for ...") and not a restatement of the pair. When in doubt, `none`.
-Prefer `qualify` or `tension` to discarding a trauma (lesson) that may still be valuable. Imagined memories
+Prefer `qualify` or `tension` to discarding a blessing-and-a-curse (lesson) that may still be valuable. Imagined memories
 can only be linked or reinforced. Then:
 
 `.fam-answer.json`:
@@ -99,4 +99,4 @@ then `fam excursion-apply --file .fam-answer.json`.
 ## Then
 
 Run `fam dinner` and tell the user, in two or three lines, what the session changed: replacements,
-tensions raised, trauma formed, and anything delightful from the poems or excursions.
+tensions raised, blessings-and-curses formed, and anything delightful from the poems or excursions.

@@ -14,15 +14,15 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 ## Every task
 
 1. `fam dinner` first: the briefing. It shows open arguments and where everyone stands, your
-   strongest memories, any trauma (hardened lessons) or family advice relevant to an open argument,
+   strongest memories, any blessing-and-a-curse (hardened lessons) or family advice relevant to an open argument,
    and suggestions.
 2. Before deciding something that might have been decided before: `fam bring-up "the question in plain words"`.
    Use `--strength 0.9` only when it really matters: strong, close cues recover repressed memories.
    It also shows family advice: what a parent or earlier generation of this project knew.
-3. When a memory, trauma or piece of advice shaped what you did, say so: `fam told-you-so m00012` (for
+3. When a memory, blessing-and-a-curse or piece of advice shaped what you did, say so: `fam told-you-so m00012` (for
    family advice or baggage, `fam take-advice s0004` (or h0005) first, then told-you-so the memory it
    gives you). This is the only thing that makes knowledge last, confirms ideas from therapy and the
-   family, and turns memories into trauma. Before you finish a task, told-you-so each memory you
+   family, and turns memories into blessings-and-curses. Before you finish a task, told-you-so each memory you
    relied on, including ones `fam dinner` showed you.
 4. When you learn or decide something worth keeping: `fam never-forget "one plain sentence" --importance 0.7`.
    Remember decisions, constraints, gotchas and why. Not chatter, not things git already records.
@@ -44,7 +44,7 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 - "(imagined)" memories came from dreams, poems or excursions in therapy. They are ideas, never facts.
 - "OUTDATED: see m00007" means a newer memory replaced it: use the newer one. "current answer,
   replaces m00003" in bring-up means the cue matched an overturned memory and this is what replaced it.
-- "repressed" memories faded out of the briefing; "trauma" never fades. Both are real memories.
+- "repressed" memories faded out of the briefing; a "blessing-and-a-curse" never fades. Both are real memories.
 - "family advice/baggage ... unsolicited, advice only" is what a relative project or earlier generation
   knew. Take it (`fam take-advice s0004`) only if it fits, then told-you-so to confirm it.
 
@@ -54,5 +54,5 @@ the conductor (the default). The old `ens` names (`listen`, `remember`, `recall`
 - "suggest: ... ready to move out as a new generation", or proposed kin: tell the user and ask. Only run
   `fam move-out`, `fam midlife-crisis "..."` or `fam adopt other-project` when the user says so.
 
-Other commands: `fam trauma`, `fam eavesdrop builder`, `fam tree`, `fam thanksgiving` (the family
+Other commands: `fam blessing-and-a-curse`, `fam eavesdrop builder`, `fam tree`, `fam thanksgiving` (the family
 reunion), `fam identity-crisis` (where this project's memory lives), `fam help`.

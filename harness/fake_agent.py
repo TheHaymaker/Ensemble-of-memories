@@ -1,7 +1,7 @@
 """An offline stand-in for Claude: drives `fam` the way the skills ask, with no model calls.
 
 It is not meant to be smart. It lets you test the harness and Family Matters' mechanics (fading,
-promotion, therapy nights, trauma (lessons), family inheritance) quickly and for free, e.g. 20 nights in a minute.
+promotion, therapy nights, blessings-and-curses (lessons), family inheritance) quickly and for free, e.g. 20 nights in a minute.
 Its judgments are deterministic per run, so two runs on the same code match.
 
 Session: listen, recall the task, use what it recalls, remember the task's expected memories.

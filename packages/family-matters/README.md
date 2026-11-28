@@ -1,8 +1,8 @@
 # Family Matters
 
 Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family: it never
-forgets (until it represses), it brings up the past, it hardens into trauma, and it hands its baggage
-down to the next generation.
+forgets (until it represses), it brings up the past, what keeps proving useful becomes a blessing and a curse, and it hands its
+baggage and its trauma down to the next generation.
 
 ## Use it in Claude Code
 
@@ -34,7 +34,7 @@ Then, in any project:
 | `fam bring-up "..."` | search memory | recall |
 | `fam told-you-so m00012` | say a memory helped (strengthens it) | use-memory |
 | `fam revise-history OLD NEW` | a newer memory overturns an older one | replace-memory |
-| `fam trauma` | hardened knowledge that never fades | lessons |
+| `fam blessing-and-a-curse` | hardened knowledge that never fades | lessons |
 | repressed | faded out of the briefing, still searchable; a strong cue recovers it | dormant |
 | `fam vent "..."` / `fam eavesdrop builder` | your note / read another agent's | write-note / read-part |
 | `fam start-argument` / `take-sides` / `settle-argument` | a question the household votes on | open-question / vote / close-question |
@@ -42,7 +42,7 @@ Then, in any project:
 | `/family-therapy` | a night: dreams, poems, excursions | a night, sleep (`/ensemble-night`) |
 | unsolicited advice (`fam take-advice s0004`) | what a parent or earlier generation knew | sayings (adopt-saying) |
 | baggage | specific memories handed down intact | heirlooms |
-| hang-ups | inherited sensitivity to a theme, like a credential leak | epigenetic marks |
+| trauma | inherited sensitivity to a theme, like a credential leak | epigenetic marks |
 | family lore | a lesson several relatives learned on their own | family wisdom |
 | `fam thanksgiving` | the family reunion | family-reunion |
 | `fam move-out` / `fam stay-home` | accept or decline coming of age as a new generation | approve-generation / decline-generation |
@@ -99,7 +99,7 @@ bins 80-457   PARTS   one OFDM band per agent (QPSK, zlib, CRC32), 953 compresse
 | `memory.py`, `test_memory.py` | tiered memory store with dormancy, revival and buffs |
 | `embeddings.py`, `calibrate.py`, `test_integration.py` | embedder adapters, threshold calibration, end-to-end tests |
 | `dreams.py`, `poets.py`, `explorers.py`, `test_sleep.py`, `test_lessons.py`, `test_poems.py`, `test_excursions.py` | dream judges, poets, explorers and their tests |
-| `family.py`, `family_view.py`, `test_family.py`, `test_generations.py` | families of projects: traits, marks (hang-ups), sayings (advice), heirlooms (baggage), reunions, coming of age, kinship |
+| `family.py`, `family_view.py`, `test_family.py`, `test_generations.py` | families of projects: traits, marks (trauma), sayings (advice), heirlooms (baggage), reunions, coming of age, kinship |
 | `fam.py`, `install.sh`, `claude/skills/*`, `test_claude_code.py` | Claude Code: the `fam` command and MCP mode, installer, skills, tests |
 | `compare.py` | runs the benchmark on both backends and draws `head_to_head.png` |
 
@@ -248,7 +248,7 @@ A judge gives each pair one outcome:
 
 Unconfirmed dream ideas get half the grace. A cheap similarity screen counts a dormant memory with no plausible partner as a fruitless exposure without a judge call. Archived memories go to `archive.jsonl.gz`; `search_archive()` and `restore()` bring them back.
 
-**Lessons** (shown as *trauma*) form at the end of a night from memories that:
+**Lessons** (shown as *blessings-and-curses*) form at the end of a night from memories that:
 - were learned or confirmed while awake;
 - have been used 4 or more times (3 to 5, by the family's steadiness);
 - have been consolidated (intermediate or long-term) for 2 nights;

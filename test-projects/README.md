@@ -14,7 +14,7 @@ recipe-core (founder)                    trail-log (unrelated founder)
 The tasks are written so themes recur down the family and memory can matter:
 
 - **Float noise** (`0.30000000000000004`) appears in recipe-core, again in meal-planner's shopping list,
-  in pantry-tracker's display and as money in grocery-bot. Does trauma (a lesson) or advice from the founder help
+  in pantry-tracker's display and as money in grocery-bot. Does a blessing-and-a-curse (a lesson) or advice from the founder help
   the descendants?
 - **Units across dimensions** (cups of flour to grams, ml + cups of milk, pack sizes in another unit).
 - **Revisits:** a later task asks to re-decide something (`floats-again`), to test recall and use.
