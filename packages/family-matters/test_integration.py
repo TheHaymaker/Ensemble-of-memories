@@ -64,7 +64,7 @@ def test_conductor_remembers_decisions_and_listen_shows_memory():
     assert "memory: 2 active" in heard and "Decided 'rotate-refresh-tokens'" in heard
     for _ in range(40):
         cond.next_beat()
-    assert "memory: 0 active, 2 dormant" in cond.listen()
+    assert "memory: 0 active, 2 repressed" in cond.listen()
     back = cond.recall("did we decide whether session tokens get renewed?", 0.95)
     assert "revived" in back and "rotate-refresh-tokens" in back, back
     return ("closing questions stored both decisions; listen() showed them, then they went dormant "

@@ -1,7 +1,7 @@
 {
   "about": "Two sessions and a night on one project. Checks the plumbing in a few minutes (or seconds with --fake).",
   "projects": ["recipe-core"],
-  "env": {"ENSEMBLE_SLEEP_AT": "2"},
+  "env": {"FAM_SLEEP_AT": "2"},
   "steps": [
     {"do": "session", "project": "recipe-core", "task": "float-display"},
     {"do": "session", "project": "recipe-core", "task": "floats-again"},

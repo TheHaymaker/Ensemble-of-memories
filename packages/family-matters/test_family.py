@@ -108,7 +108,7 @@ def test_sayings_are_advice_until_confirmed():
     p = Player(ens, "birch", F.store("birch"), family=F)
     p.open_question("credential-rotation", text="How often should we rotate shared credentials?")
     heard = p.listen()
-    line = next(l for l in heard.splitlines() if l.startswith("family saying"))
+    line = next(l for l in heard.splitlines() if l.startswith("family advice"))
     sid = line.split()[2]
     assert "advice only" in line and "from atlas, your parent" in line
     mid = p.family.adopt("birch", sid)
@@ -148,7 +148,7 @@ def test_heirlooms_pass_intact():
     ens = MdEnsemble(fresh("heir_ens"), ["elm"])
     p = Player(ens, "elm", F.store("elm"), family=F)
     p.open_question("rollback-or-investigate", text="During the incident do we rollback first or investigate?")
-    line = next(l for l in p.listen().splitlines() if "heirloom" in l)
+    line = next(l for l in p.listen().splitlines() if "baggage" in l)
     assert "revert first, investigate second" in line
     return f"great-grandchild elm, facing an incident question, was handed: '{line[:120]}'"
 
