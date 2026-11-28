@@ -1,69 +1,58 @@
+<img src="../../assets/logo.svg" alt="Family Matters logo" width="96" align="right">
+
 # Family Matters
 
-Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family: it never
-forgets (until it represses), it brings up the past, what keeps proving useful becomes a blessing and a curse, and it hands its
-baggage and its generational trauma down to the next generation.
+Long-lived memory for Claude Code, with all the warmth and dysfunction of a real family. For the overview, results and diagrams, see the [main README](../../README.md). This page is the reference.
 
-## Use it in Claude Code
+## Install
 
 ```bash
-cd packages/family-matters   # from a clone of this repo
-./install.sh --hook          # add --mcp to also register it as an MCP server
+./install.sh --hook          # from this folder; add --mcp to also register an MCP server
 ```
 
-This installs:
-- **the `fam` command** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`;
-- **skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night: dreams, poems, excursions), plus seven alias skills for the night named after other family sayings: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`;
-- **with `--hook`, a SessionStart hook** that runs `fam --listen` (family gossip), so every session opens knowing the project's state. Your `~/.claude/settings.json` is backed up and merged, not replaced.
+- **`fam`** in `~/.local/bin`, with its own Python environment in `~/.family-matters/venv`.
+- **Skills** in `~/.claude/skills`: `family-matters` (everyday use) and `thats-not-how-i-remember-it` (a night), plus seven aliases for the night: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`.
+- **With `--hook`**, a SessionStart hook that runs the briefing (`fam --listen`). Your `~/.claude/settings.json` is backed up and merged, not replaced.
 
-Then, in any project:
-- **Claude uses the skills by itself:** it catches up on the family gossip at the start of a task, never forgets decisions, brings up the past before re-deciding, and takes sides.
-- **`/thats-not-how-i-remember-it`** (or any of its aliases) runs a night, with Claude as the patient, the therapist, the poet and the runaway. `fam gossip` says when therapy is overdue.
-- **In your terminal:** `fam gossip`, `fam bring-up "..."`, `fam tree` and `fam help`.
+Claude then uses the skills on its own. Run a night when `fam gossip` says therapy is overdue.
 
-**Projects** are named after the folder Claude Code starts in, or `FAM_PROJECT`. Start a new project with `FAM_PARENTS=other-project` to make it a child of that project. Subagents pass `--agent builder` (or their own name) to act as other household members. Moving out (new generations) and adoption (kinship) are always your call: the skill tells Claude to ask you first.
+**Projects** are named after the folder Claude Code starts in, or `FAM_PROJECT`. `FAM_PARENTS=other-project` makes a new project a child of another. Subagents pass `--agent NAME`. Moving out and adoption are always your call: the skill tells Claude to ask you first.
 
-**Embeddings:** the default is keyword matching, which needs no setup. For meaning-based recall, set `FAM_EMBEDDER=hybrid` (keywords first, the local model2vec model's best guess when no keyword matches; about 30 MB), `model2vec` or `gemini` before a project's first use, and install that package into `~/.family-matters/venv`. A store keeps the embedder it was created with. On 15 labelled cues from real sessions, `hybrid` found 14, keywords 12 and model2vec alone 8 (`harness/recall_eval.py`).
+**Embeddings:** keyword matching by default, no setup. For meaning-based recall, set `FAM_EMBEDDER=hybrid` (keywords first, then a local model2vec model, about 30 MB), `model2vec` or `gemini` before a project's first use, and install that package into `~/.family-matters/venv`. On 15 labelled cues from real sessions, `hybrid` found 14, keywords 12 and model2vec alone 8.
 
-### What the family calls things
+**Upgrading an old `ens` install:** re-run `./install.sh` with the same flags. It moves `~/.ensemble` to `~/.family-matters` (leaving a symlink), makes `ens` a shim for `fam`, swaps in the new skills and hook, and with `--mcp` re-registers the server as `family-matters`. Old command names and `ENSEMBLE_*` variables still work.
 
-| Family Matters | what it is | the engine's word (code, storage, docs below, old `ens` command) |
+## What the family calls things
+
+Storage and the engine docs below keep the engine's words, so nothing on disk changed in the rename.
+
+| command or name | what it is | engine's word |
 |---|---|---|
-| `fam gossip` | the session-start briefing | listen (`fam dinner` also still works) |
-| `fam never-forget "..."` | store a memory | remember |
+| `fam gossip` | the session-start briefing | listen |
+| `fam never-forget "..." [--replaces m00003]` | store a memory | remember |
 | `fam bring-up "..."` | search memory | recall |
-| `fam told-you-so m00012` | say a memory helped (strengthens it) | use-memory |
+| `fam told-you-so m00012` | a memory helped (strengthens it) | use-memory |
 | `fam revise-history OLD NEW` | a newer memory overturns an older one | replace-memory |
-| blessing-and-a-curse: `fam lessons`, `fam blessings`, `fam curses` (all the same command) | hardened knowledge that never fades | lessons |
-| repressed | faded out of the briefing, still searchable; a strong cue recovers it | dormant |
-| `fam vent "..."` / `fam eavesdrop builder` | your note / read another agent's | write-note / read-part |
+| `fam lessons` (or `blessings`, `curses`) | blessings-and-curses: hardened knowledge that never fades | lessons |
+| repressed | faded out of the briefing, still searchable | dormant |
+| `fam vent` / `fam eavesdrop builder` | your note / read another agent's | write-note / read-part |
 | `fam start-argument` / `take-sides` / `settle-argument` | a question the household votes on | open-question / vote / close-question |
 | `fam time-heals` | advance one beat | next-beat |
-| `/thats-not-how-i-remember-it` (aliases: `/things-will-look-better-in-the-morning`, `/we-dont-talk-about-that`, `/lets-not-air-dirty-laundry`, `/who-told-you-that`, `/youll-understand-when-youre-older`, `/dont-make-me-come-in-there` and `/go-to-your-room-and-think-about-what-you-did`) | a night (therapy): dreams, poems, excursions | a night, sleep (`/ensemble-night`) |
-| unsolicited advice (`fam take-advice s0004`) | what a parent or earlier generation knew | sayings (adopt-saying) |
-| baggage | specific memories handed down intact | heirlooms |
-| generational trauma: `fam generational-trauma`, `fam received-wisdom` (the same command) | sensitivity to a theme left by a big experience like a credential leak, lived or inherited | epigenetic marks |
+| `/thats-not-how-i-remember-it` | a night (therapy): dreams, poems, excursions | sleep |
+| `fam take-advice s0004` | adopt unsolicited advice from a relative | adopt-saying |
+| baggage | memories handed down intact | heirlooms |
+| `fam generational-trauma` (or `received-wisdom`) | inherited sensitivity to a theme | epigenetic marks |
 | family lore | a lesson several relatives learned on their own | family wisdom |
 | `fam thanksgiving` | the family reunion | family-reunion |
-| `fam move-out` / `fam stay-home` | accept or decline coming of age as a new generation | approve-generation / decline-generation |
-| `fam midlife-crisis "v2 rewrite"` | declare a milestone: come of age now | declare-milestone |
+| `fam move-out` / `fam stay-home` | accept or snooze a new generation | approve / decline-generation |
+| `fam midlife-crisis "v2 rewrite"` | declare a milestone now | declare-milestone |
 | `fam adopt other-project` | approve proposed kinship | approve-kin |
 | `fam tree` / `fam identity-crisis` | draw the family / where this project lives | family-tree / whoami |
 
-Storage keeps the engine's words, so nothing on disk changed in the rename.
+## Under the hood: the shared-score engine
 
-### Upgrading from Ensemble
-
-Re-run `./install.sh` (with the same flags). It moves `~/.ensemble` to `~/.family-matters` and leaves a
-symlink behind, turns `ens` into a shim for `fam`, swaps the `ensemble`/`ensemble-night` skills for the
-new ones, rewrites the SessionStart hook to `fam --listen`, and with `--mcp` re-registers the MCP server
-as `family-matters`. Until you re-run it, an old `~/.ensemble` keeps being used. Every old command name
-(`ens listen`, `ens remember`, `ens lessons`, ...) and every `ENSEMBLE_*` variable still works.
-
-## Under the hood: the Ensemble engine
-
-Family Matters is built on **Ensemble**, which is why the engine's files and classes (`ensemble.py`,
-`MdEnsemble`, `tools.Player`) keep that name and the sections below use its vocabulary.
+The engine keeps its original file and class names (`ensemble.py`, `MdEnsemble`, `tools.Player`),
+and the sections below use its vocabulary.
 
 Shared state for a multi-agent system, held in **one fixed-size WAV file** (196,652 bytes, 2.05 s, 48 kHz mono 16-bit). It holds up to 9 agents and 32 open questions. The file never grows.
 
@@ -94,7 +83,7 @@ bins 80-457   PARTS   one OFDM band per agent (QPSK, zlib, CRC32), 953 compresse
 | `tools.py` | `Player`: the LLM-facing tools (`listen`, `read_part`, `write_note`, `vote`, `withdraw`, `audit`, plus `open_question`, `close_question`, `next_beat` for the conductor) |
 | `test_ensemble.py` | 9 robustness tests |
 | `simulate.py` | 60-beat benchmark against a message thread and markdown files (`python3 simulate.py out md` for the markdown backend) |
-| `mdensemble.py` | the same protocol on plain markdown files, with fade computed at read time, and `export_wav()` to render the state as an Ensemble WAV |
+| `mdensemble.py` | the same protocol on plain markdown files, with fade computed at read time, and `export_wav()` to render the state as a WAV |
 | `test_md.py` | the same 9 tests on the markdown backend, plus export through MP3 |
 | `memory.py`, `test_memory.py` | tiered memory store with dormancy, revival and buffs |
 | `embeddings.py`, `calibrate.py`, `test_integration.py` | embedder adapters, threshold calibration, end-to-end tests |
@@ -139,7 +128,7 @@ agents = [Agent(name=n, model="gemini-2.5-flash", tools=Player(mix, n).tools(),
 |---|---|---|
 | message thread | 19,390 | 78 KB and growing |
 | markdown files (read when changed) | 25,976 | 2.9 KB, flat |
-| **Ensemble** | **4,648** | 196.7 KB, fixed |
+| **shared score (audio)** | **4,648** | 196.7 KB, fixed |
 
 Verdicts read from the score matched the ledger at all 120 checks. The audit caught the faulty agent the beat it acted.
 
@@ -151,8 +140,8 @@ Verdicts read from the score matched the ledger at all 120 checks. The audit cau
 |---|---|---|---|---|
 | message thread | 19,390 | 78 KB, growing | | |
 | plain markdown files | 25,976 | 2.9 KB | | |
-| Ensemble, audio | 4,648 | 196.7 KB, fixed | 1-3 ms | 9 agents, 32 questions, 953 B parts |
-| **Ensemble, markdown** | **4,613** | **3.4 KB, bounded** | **0.2-0.4 ms** | any agents, ~125 questions per 4 KB conductor file |
+| shared score, audio | 4,648 | 196.7 KB, fixed | 1-3 ms | 9 agents, 32 questions, 953 B parts |
+| **shared score, markdown** | **4,613** | **3.4 KB, bounded** | **0.2-0.4 ms** | any agents, ~125 questions per 4 KB conductor file |
 
 Markdown tallies are exact (no 0.001 grid), merges are exact, and the files can be read and diffed. Instead of the audio-style audit, the markdown audit checks that `score.md` still matches the parts it was built from, so a hand-edited summary is caught.
 
@@ -178,7 +167,7 @@ A memory store on plain files with four tiers. Strength fades each beat at the t
 
 `test_memory.py` runs 6 tests and draws `memory_life.png` (300 beats, four example memories, tier counts against summary size). With 2,000 memories over 500 beats, the summary stayed under about 200 tokens while 1,425 memories sat dormant on disk.
 
-## Embeddings and the Ensemble connection
+## Embeddings and per-agent memory
 
 ```python
 from embeddings import GeminiEmbedder          # or Model2VecEmbedder(), SentenceTransformerEmbedder()
@@ -192,10 +181,10 @@ players = {n: Player(mix, n, memory=MemoryStore(f"memory/{n}", emb)) for n in mi
 tools = players["conductor"].tools()           # 12 tools for the conductor, 9 for the others
 ```
 
-- **Each agent has private memory.** `listen()` adds its 5 strongest memories under the ensemble summary.
+- **Each agent has private memory.** `listen()` adds its 5 strongest memories under the shared summary.
 - **Memory tools:** `remember`, `recall` (search by meaning; a strong, close cue revives dormant memories) and `use_memory`.
 - **Decisions become memories.** When the conductor closes a question, the verdict is stored in its memory, weighted by how clear the vote was.
-- **One clock.** Memory fades on the ensemble's beat.
+- **One clock.** Memory fades on the score's beat.
 - **Embedding calls never hold the lock.** Text is embedded before the store is locked, so a slow API call doesn't block other agents.
 - **A store keeps its embedder.** Opening it with a different one is refused, since the vectors wouldn't be comparable.
 
@@ -232,8 +221,8 @@ A judge gives each pair one outcome:
 | reinforce | both decay slower; a dormant duplicate is merged into its partner |
 | add | a new link, stored as an unconfirmed idea |
 | qualify | both are right under different conditions: both kept at full strength, linked to a memory naming when each applies |
-| substitute / subtract | the newer replaces or contradicts the older, which is cut to 30% and marked outdated |
-| tension | an unclear conflict: stored, and raised as an Ensemble vote by the conductor; yes keeps the first memory, no the second, split keeps both |
+| substitute / subtract | the newer replaces or contradicts the older, which is cut to 30% and marked outdated (a replaced memory is no longer briefed or handed down) |
+| tension | an unclear conflict: stored, and raised as a vote by the conductor; yes keeps the first memory, no the second, split keeps both |
 
 **Trust rules:**
 - **Dream ideas need confirmation.** A dream-made idea can't overrule a waking memory; the attempt becomes a tension instead. After 2 waking uses, the idea counts as confirmed.
